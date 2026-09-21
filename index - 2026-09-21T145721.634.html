@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Recebimento de Mercadorias | Rede Nilo</title>
+<style>
+:root{
+  --bg:#F7F7F5;
+  --surface:#ffffff;
+  --surface-2:#f8fafc;
+  --text:#333333;
+  --muted:#6b7280;
+  --line:#e4e7ec;
+  --primary:#FFC400;
+  --primary-dark:#E6A100;
+  --navy:#1B2A4A;
+  --green:#17834f;
+  --red:#c93c3c;
+  --orange:#dc7b14;
+  --blue:#2962b8;
+  --shadow:0 10px 30px rgba(27,42,74,.08);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh}
+.header{background:linear-gradient(135deg,var(--navy),#243a63);color:#fff;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:sticky;top:0;z-index:30;box-shadow:0 6px 18px rgba(17,27,45,.18)}
+.brand{display:flex;align-items:center;gap:14px}.brand-mark{width:48px;height:48px;border-radius:14px;background:var(--primary);color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:22px}
+.brand h1{font-size:20px;margin:0 0 4px}.brand p{font-size:12px;margin:0;color:#cfd7e5}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:10px 12px;border-radius:10px}
+.sync{font-size:11px;color:#cfd7e5}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--primary);color:var(--navy)}.btn-primary:hover{background:#ffd633}
+.btn-light{background:#fff;color:var(--navy)}.btn-dark{background:var(--navy);color:#fff}
+.btn-outline{background:#fff;border:1px solid var(--line);color:var(--text)}
+.btn-danger{background:#fff0f0;color:var(--red);border:1px solid #f4caca}
+.btn-sm{padding:7px 10px;font-size:12px}
+.main{padding:22px 26px 36px;max-width:1900px;margin:0 auto}
+.toolbar{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;align-items:end;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow);margin-bottom:18px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:150px}.field label{font-size:12px;color:var(--muted);font-weight:700}
+.field input,.field select,.field textarea{border:1px solid #d6dae2;border-radius:9px;padding:10px 11px;background:#fff;color:var(--text)}
+.toolbar-spacer{flex:1}.quick-filters{display:flex;gap:7px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px}.tab{border:1px solid var(--line);background:#fff;color:var(--muted);padding:10px 16px;border-radius:999px;font-weight:800}.tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.view{display:none}.view.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:var(--shadow)}
+.kpi .label{font-size:12px;color:var(--muted);font-weight:700}.kpi .value{font-size:26px;font-weight:900;margin-top:8px}.kpi .sub{font-size:11px;color:var(--muted);margin-top:6px}
+.kpi.good .value{color:var(--green)}.kpi.bad .value{color:var(--red)}.kpi.warn .value{color:var(--orange)}
+.grid-2{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-bottom:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.panel h2{font-size:16px;margin:0 0 4px}.panel .hint{color:var(--muted);font-size:12px;margin:0 0 16px}
+.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stage-metric{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:14px}
+.stage-metric .name{font-size:11px;color:var(--muted);min-height:30px}.stage-metric .time{font-size:17px;font-weight:900;margin-top:8px}
+.chart-bars{display:flex;align-items:end;gap:8px;height:210px;border-bottom:1px solid var(--line);padding:8px 4px 0;overflow-x:auto}
+.bar-col{min-width:34px;flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.bar{width:72%;min-height:2px;background:linear-gradient(180deg,var(--primary),var(--primary-dark));border-radius:6px 6px 0 0}
+.bar-label{font-size:10px;color:var(--muted)}
+.daily-bar-group{display:flex;gap:4px;align-items:flex-end;height:100%;width:100%;justify-content:center}
+.daily-bar{width:16px;min-height:2px;border-radius:4px 4px 0 0}
+.daily-bar.total{background:#c7ccd4}
+.status-list{display:flex;flex-direction:column;gap:12px}.status-row{display:grid;grid-template-columns:145px 1fr 42px;align-items:center;gap:10px;font-size:12px}
+.status-track{height:10px;background:#eef1f5;border-radius:999px;overflow:hidden}.status-fill{height:100%;border-radius:999px}.status-count{text-align:right;font-weight:800}
+.kanban-wrap{overflow:visible;padding-bottom:8px}.kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%}
+.kanban-col{background:#edf1f5;border:1px solid #dfe4eb;border-radius:12px;min-height:300px;padding:8px}
+.kanban-col.drag-over{outline:3px solid rgba(255,196,0,.55);background:#fff8dc}
+.col-head{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:2px 2px 8px}
+.col-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);line-height:1.2}
+.dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.badge{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-weight:900;font-size:11px;flex:0 0 auto}
+.cards{display:flex;flex-direction:column;gap:8px}
+.order-card{background:#fff;border:1.5px solid rgba(201,60,60,.22);border-radius:12px;padding:10px;box-shadow:0 4px 10px rgba(17,27,45,.05);cursor:grab}
+.order-card.dragging{opacity:.55}
+.order-card.priority,.order-card.late{border-left:3px solid var(--red)}
+.order-urgent{color:var(--red);font-weight:900;font-size:9px;letter-spacing:.02em;margin:1px 0 5px}
+.stage-alert-bar{background:#fdecea;color:var(--red);font-weight:700;font-size:9.5px;letter-spacing:.01em;text-align:center;padding:3px 6px;border-radius:5px;margin:2px 0 6px;border:1px solid #f6c6c1}
+.order-changes-pill{display:inline-flex;align-items:center;gap:4px;background:#fff1d6;color:#915b00;font-weight:800;font-size:9px;padding:3px 7px;border-radius:999px;margin:1px 0 5px;white-space:nowrap}
+.order-top{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.order-id{font-size:10px;color:var(--muted);font-weight:800}
+.order-type-pill{font-size:9px;background:#eef1f5;color:var(--text);padding:3px 8px;border-radius:999px;font-weight:800;white-space:nowrap}
+.card-delete{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--red);font-size:13px;line-height:1;padding:0;display:grid;place-items:center;flex:0 0 auto}
+.card-priority{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:11px;line-height:1;padding:0;display:grid;place-items:center;flex:0 0 auto}
+.card-priority.is-urgent{background:#fff0f0;border-color:#f4caca;color:var(--red)}
+.card-priority:hover{background:#fff8e1;border-color:#ffe082}
+.blink-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;animation:blinkDot 1s ease-in-out infinite}
+.blink-dot.blink-red{background:var(--red)}
+.blink-dot.blink-yellow{background:#f2c200}
+@keyframes blinkDot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(201,60,60,.5)}50%{opacity:.25;box-shadow:0 0 0 4px rgba(201,60,60,0)}}
+.ic-blink-red{display:inline-flex;width:9px;height:9px;border-radius:50%;background:var(--red);animation:blinkBadge 1s ease-in-out infinite;vertical-align:middle;margin-right:3px}
+@keyframes blinkBadge{0%,100%{opacity:1}50%{opacity:.25}}
+.card-delete:hover{background:#fff0f0;border-color:#f4caca}
+.order-client{font-size:12px;font-weight:900;margin:6px 0 5px;color:var(--text);line-height:1.25}
+.order-line{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}
+.order-line .ic{font-size:10px}
+.order-line.assign{font-weight:800}
+.order-line.assign .missing{color:var(--orange)}
+.order-line.assign .set{color:var(--text)}
+.timer-box{background:#f4f6f9;border-radius:9px;padding:7px;margin:8px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.timer-label{font-size:7.5px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.01em;white-space:nowrap}
+.timer-value{font-weight:900;font-size:11px;margin-top:2px;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.order-sub{font-size:9px;color:var(--muted);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-sub b{color:var(--text);font-weight:800}
+.order-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
+.order-actions .btn{min-width:0;padding:7px 3px;font-size:9.5px;border-radius:8px;font-weight:800;background:#fff;border:1px solid var(--line);color:var(--text);line-height:1.15}
+.order-actions .btn.btn-advance{background:var(--primary);color:var(--navy);border:0}
+.order-actions .btn.btn-advance:hover{background:var(--primary-dark)}
+.order-actions .btn.btn-done{background:#e9f7ef;color:var(--green);border:1px solid #bfe4ce}
+.sla-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.daily-sla-display{border:1px solid var(--line);background:#f8fafc;border-radius:10px;padding:8px 11px;min-width:190px}
+.daily-sla-display .daily-label{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase}
+.daily-sla-display .daily-value{font-size:12px;font-weight:900;margin-top:3px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+.data-table{width:100%;border-collapse:collapse;min-width:1100px;background:#fff}
+.data-table th{position:sticky;top:0;background:var(--navy);color:#fff;text-align:left;font-size:11px;padding:11px 10px;white-space:nowrap}
+.data-table td{padding:10px;border-bottom:1px solid var(--line);font-size:11px;white-space:nowrap}
+.data-table tr:hover td{background:#fffbea}
+.sla-ok{color:var(--green);background:#e9f7ef;border-radius:999px;padding:4px 8px;font-weight:800;font-size:10px}
+.sla-bad{color:var(--red);background:#fff0f0;border-radius:999px;padding:4px 8px;font-weight:800;font-size:10px}
+.client-tools{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.search{min-width:280px;flex:1;border:1px solid #d6dae2;border-radius:10px;padding:10px 12px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,17,28,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:18px;width:min(760px,100%);max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.28)}
+.modal.modal-wide{width:min(1000px,100%)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+.modal-head h3{margin:0;font-size:18px}.modal-body{padding:20px}
+.modal-foot{padding:15px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+.close{background:#f2f4f7;border:0;width:34px;height:34px;border-radius:9px;font-size:20px}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.span-2{grid-column:span 2}
+.note{background:#fff8db;border:1px solid #f5dd8a;border-radius:10px;padding:11px;font-size:11px;color:#6d5710;margin-bottom:14px}
+.whatsapp-order{margin:0;white-space:pre-wrap;word-break:break-word;background:#fff;border:1px solid #dfe4eb;border-radius:10px;padding:14px;min-height:120px;max-height:260px;overflow:auto;font-size:12px;line-height:1.55}
+.changes-table{width:100%;border-collapse:collapse;margin-top:10px}.changes-table th{background:var(--navy);color:#fff;padding:8px;text-align:left;font-size:10px}.changes-table td{padding:8px;border-bottom:1px solid var(--line);font-size:10px}
+.change-type{display:inline-flex;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900;background:#eef1f5}
+.change-type.cancel{background:#fff0f0;color:var(--red)}.change-type.replace{background:#fff1d6;color:#915b00}.change-type.add{background:#e9f7ef;color:var(--green)}
+.empty{padding:28px;text-align:center;color:var(--muted);font-size:12px}
+.toast{position:fixed;right:22px;bottom:22px;background:var(--navy);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);z-index:200;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}
+.toast.show{opacity:1;transform:translateY(0)}
+.footer-note{font-size:11px;color:var(--muted);text-align:center;padding-top:16px}
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy),#243a63);display:flex;align-items:center;justify-content:center;padding:20px;z-index:500}
+.auth-card{background:#fff;border-radius:18px;width:min(440px,100%);max-height:94vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.3);padding:28px}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.auth-brand .brand-mark{width:42px;height:42px;border-radius:12px;background:var(--primary);color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:19px;flex:0 0 auto}
+.auth-brand h2{margin:0;font-size:17px;color:var(--navy)}
+.auth-brand p{margin:2px 0 0;font-size:11px;color:var(--muted)}
+.auth-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.auth-field label{font-size:12px;color:var(--muted);font-weight:700}
+.auth-field input{border:1px solid #d6dae2;border-radius:9px;padding:11px 12px;background:#fff;font-size:14px}
+.auth-error{background:#fff0f0;border:1px solid #f4caca;color:var(--red);border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:14px;display:none}
+.auth-error.show{display:block}
+.auth-success{background:#e9f7ef;border:1px solid #bfe4ce;color:var(--green);border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:14px;display:none}
+.auth-success.show{display:block}
+.auth-links{display:flex;justify-content:space-between;margin-top:14px;font-size:12px}
+.auth-links a{color:var(--navy);font-weight:700;text-decoration:none;cursor:pointer}
+.auth-links a:hover{text-decoration:underline}
+.auth-submit{width:100%;padding:12px;border:0;border-radius:10px;background:var(--primary);color:var(--navy);font-weight:800;font-size:14px;cursor:pointer;margin-top:6px}
+.store-select-btn{width:100%;padding:16px 18px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);font-weight:800;font-size:15px;cursor:pointer;text-align:left;transition:.15s;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.store-select-btn:hover{border-color:var(--primary);background:#fffbea;box-shadow:0 2px 10px rgba(255,196,0,.25)}
+.store-select-name{font-size:15px;font-weight:800;color:var(--navy)}
+.store-select-cta{font-size:12px;font-weight:900;color:var(--navy);background:var(--primary);padding:6px 12px;border-radius:999px;white-space:nowrap}
+.auth-submit:hover{background:var(--primary-dark)}
+.admin-tabs{display:flex;gap:8px;margin-bottom:18px}
+.admin-tab{border:1px solid var(--line);background:#fff;color:var(--muted);padding:9px 15px;border-radius:999px;font-weight:800;font-size:13px}
+.admin-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.status-pill{font-size:10px;font-weight:800;padding:4px 9px;border-radius:999px}
+.status-pill.pendente{background:#fff1d6;color:#915b00}
+.status-pill.ativo{background:#e9f7ef;color:var(--green)}
+.status-pill.bloqueado{background:#fff0f0;color:var(--red)}
+@media(max-width:1250px){.kpis{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}.stage-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1100px){.kanban{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr}.span-2{grid-column:span 1}}
+@media(max-width:760px){
+  .main{padding:14px 12px 28px}
+  .header{flex-wrap:wrap;padding:14px;gap:10px}
+  .brand{width:100%}
+  .brand p{display:none}
+  .header-actions{width:100%;justify-content:flex-start;gap:8px}
+  .header-actions .btn{flex:1 1 auto;justify-content:center;font-size:12px;padding:9px 10px}
+  .header-actions .sync,.header-actions .clock{flex:0 0 auto;font-size:10px;padding:7px 9px}
+  .toolbar{padding:12px;gap:10px}
+  .toolbar .field{min-width:0;flex:1 1 130px}
+  .quick-filters{width:100%}
+  .quick-filters .btn{flex:1 1 auto}
+  .sla-toolbar{width:100%;justify-content:space-between}
+  .daily-sla-display{min-width:0;flex:1}
+  .tabs{gap:6px;-webkit-overflow-scrolling:touch}
+  .tab{padding:8px 12px;font-size:12px;white-space:nowrap}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kpi{padding:13px}
+  .kpi .value{font-size:20px}
+  .stage-grid{grid-template-columns:repeat(2,1fr)}
+  .kanban{grid-template-columns:1fr;gap:12px}
+  .kanban-col{min-height:auto}
+  .grid-2{grid-template-columns:1fr;gap:12px}
+  .panel{padding:14px}
+  .table-wrap{max-width:100%}
+  .data-table{font-size:10px}
+  .data-table th,.data-table td{padding:8px 6px}
+  .modal,.modal.modal-wide{width:100%;max-width:100%;border-radius:14px 14px 0 0;position:fixed;left:0;right:0;bottom:0;max-height:88vh;margin:0}
+  .modal-backdrop{align-items:flex-end;padding:0}
+  .modal-backdrop.open{align-items:flex-end}
+  .form-grid{grid-template-columns:1fr;gap:10px}
+  .modal-body{padding:16px}
+  .modal-foot{flex-wrap:wrap;padding:12px 16px}
+  .modal-foot .btn{flex:1 1 auto;justify-content:center}
+  .client-tools{flex-direction:column;align-items:stretch}
+  .client-tools > div:last-child{flex-direction:column;align-items:stretch}
+  .search{min-width:0}
+  .auth-card{padding:22px 18px;border-radius:14px}
+  .store-select-btn{padding:14px}
+  .store-select-name{font-size:13px}
+  .store-select-cta{font-size:11px;padding:5px 10px}
+  .admin-tabs{flex-wrap:wrap}
+  .admin-tab{flex:1 1 auto;text-align:center;font-size:12px;padding:8px 10px}
+  .order-card{padding:9px}
+  .order-actions{gap:4px}
+  .order-actions .btn{font-size:9px;padding:7px 3px}
+}
+@media(max-width:420px){
+  .kpis{grid-template-columns:1fr}
+  .stage-grid{grid-template-columns:1fr}
+  .header-actions .btn span{display:none}
+}
+.daily-bar.delivered{background:var(--navy)}
+.hint{color:var(--muted);font-size:12px}
+.stage-metric .count{font-size:11px;color:var(--muted);margin-top:4px}
+.field textarea{resize:vertical}
+
+</style>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card" id="authCardLogin">
+    <div style="text-align:center;margin-bottom:22px">
+      <div class="brand-mark" style="margin:0 auto 14px;width:64px;height:64px;font-size:28px">N</div>
+      <h2 style="margin:0;font-size:20px;color:var(--navy);letter-spacing:.02em">RECEBIMENTO DE MERCADORIAS</h2>
+      <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Rede Nilo — acesso restrito</p>
+    </div>
+    <div class="auth-error" id="loginError"></div>
+    <div class="auth-field"><label>Usuário</label><input id="loginUsuario" autocomplete="username"></div>
+    <div class="auth-field"><label>Senha</label><input id="loginSenha" type="password" autocomplete="current-password"></div>
+    <button class="auth-submit" onclick="doLogin()">Entrar</button>
+    <div class="auth-links">
+      <a onclick="showAuthCard('authCardForgot')">Esqueci minha senha</a>
+      <a onclick="showAuthCard('authCardRegister')">Cadastrar novo usuário</a>
+    </div>
+  </div>
+
+  <div class="auth-card" id="authCardRegister" style="display:none">
+    <div class="auth-brand"><div class="brand-mark">N</div><div><h2>Cadastrar usuário</h2><p>Seu acesso precisa ser autorizado por um administrador</p></div></div>
+    <div class="auth-error" id="registerError"></div>
+    <div class="auth-success" id="registerSuccess"></div>
+    <div class="auth-field"><label>Nome completo</label><input id="regNome"></div>
+    <div class="auth-field"><label>Telefone</label><input id="regTelefone" placeholder="(66) 99999-9999"></div>
+    <div class="auth-field"><label>E-mail</label><input id="regEmail" type="email"></div>
+    <div class="auth-field"><label>Usuário</label><input id="regUsuario" autocomplete="username"></div>
+    <div class="auth-field"><label>Senha</label><input id="regSenha" type="password" autocomplete="new-password"></div>
+    <div class="auth-field"><label>Confirmar senha</label><input id="regSenhaConfirm" type="password" autocomplete="new-password"></div>
+    <button class="auth-submit" onclick="doRegister()">Cadastrar</button>
+    <div class="auth-links"><a onclick="showAuthCard('authCardLogin')">← Voltar para o login</a><span></span></div>
+  </div>
+
+  <div class="auth-card" id="authCard2FA" style="display:none">
+    <div class="auth-brand"><div class="brand-mark">N</div><div><h2>Verificação em duas etapas</h2><p>Enviamos um código para o seu e-mail cadastrado</p></div></div>
+    <div class="auth-error" id="twofaError"></div>
+    <div class="auth-field"><label>Código de 6 dígitos</label><input id="twofaCode" maxlength="6" placeholder="000000" style="text-align:center;font-size:20px;letter-spacing:4px;font-weight:800"></div>
+    <button class="auth-submit" onclick="doVerify2FA()">Confirmar</button>
+    <div class="auth-links"><a onclick="showAuthCard('authCardLogin')">← Voltar para o login</a><span></span></div>
+  </div>
+
+  <div class="auth-card" id="authCardForgot" style="display:none">
+    <div class="auth-brand"><div class="brand-mark">N</div><div><h2>Redefinir senha</h2><p>Enviaremos um link para o e-mail cadastrado</p></div></div>
+    <div class="auth-error" id="forgotError"></div>
+    <div class="auth-success" id="forgotSuccess"></div>
+    <div class="auth-field"><label>Usuário</label><input id="forgotUsuario"></div>
+    <button class="auth-submit" onclick="doForgotPassword()">Enviar link de redefinição</button>
+    <div class="auth-links"><a onclick="showAuthCard('authCardLogin')">← Voltar para o login</a><span></span></div>
+  </div>
+
+  <div class="auth-card" id="authCardReset" style="display:none">
+    <div class="auth-brand"><div class="brand-mark">N</div><div><h2>Definir nova senha</h2><p>Escolha uma nova senha de acesso</p></div></div>
+    <div class="auth-error" id="resetError"></div>
+    <div class="auth-field"><label>Nova senha</label><input id="resetSenha" type="password"></div>
+    <div class="auth-field"><label>Confirmar nova senha</label><input id="resetSenhaConfirm" type="password"></div>
+    <button class="auth-submit" onclick="doResetPassword()">Salvar nova senha</button>
+    <div class="auth-links"><a onclick="showAuthCard('authCardLogin')">← Voltar para o login</a><span></span></div>
+  </div>
+
+  <div class="auth-card" id="authCardStoreSelect" style="display:none">
+    <div class="auth-brand"><div class="brand-mark">N</div><div><h2>Selecione a loja</h2><p>Escolha qual loja deseja acompanhar</p></div></div>
+    <div id="storeSelectList" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="auth-links"><a onclick="doLogout()">← Sair</a><span></span></div>
+  </div>
+</div>
+
+
+<div class="app" id="mainApp" style="display:none">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div><h1>Painel de Recebimento de Mercadorias</h1><p>Kanban operacional, SLA e cronoanálise da descarga — Rede Nilo</p></div>
+    </div>
+    <div class="header-actions">
+      <div class="sync" id="syncStatus">Conectando à planilha...</div>
+      <div class="clock" id="liveClock">--:--:--</div>
+      <div class="sync" id="userBadge" style="font-weight:800"></div>
+      <button class="btn btn-outline btn-sm" id="storeSwitchBtn" style="display:none" onclick="openStoreSwitcher()">🏬 Trocar loja</button>
+      <button class="btn btn-primary" onclick="openReceiptModal()">＋ Novo recebimento</button>
+      <button class="btn btn-dark" id="adminPanelBtn" style="display:none" onclick="openAdminPanel()">🛡 Painel administrativo</button>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="toolbar">
+      <div class="field"><label>Data inicial</label><input type="date" id="dateStart" onchange="renderAll()"></div>
+      <div class="field"><label>Data final</label><input type="date" id="dateEnd" onchange="renderAll()"></div>
+      <div class="quick-filters">
+        <button class="btn btn-outline btn-sm" onclick="setQuickDate('today')">Hoje</button>
+        <button class="btn btn-outline btn-sm" onclick="setQuickDate('yesterday')">Ontem</button>
+        <button class="btn btn-outline btn-sm" onclick="setQuickDate('7days')">Últimos 7 dias</button>
+        <button class="btn btn-danger btn-sm" onclick="clearFilters()">✕ Limpar filtros</button>
+      </div>
+      <label id="viewAllStoresLabel" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px"><input type="checkbox" id="viewAllStores" onchange="toggleViewAllStores()" style="width:15px;height:15px">Ver todas as lojas</label>
+      <div class="toolbar-spacer"></div>
+      <div class="sla-toolbar">
+        <div class="daily-sla-display" id="dailySlaDisplay"><div class="daily-label">SLA do dia (ciclo total)</div><div class="daily-value">Carregando...</div></div>
+        <button class="btn btn-outline" type="button" onclick="openDailySlaModal()">⏱ Cadastrar SLA do dia</button>
+      </div>
+      <button class="btn btn-dark" onclick="exportExcel()">⬇ Exportar Excel</button>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab active" data-view="kanban" onclick="switchView('kanban',this)">Kanban</button>
+      <button class="tab" data-view="dashboard" onclick="switchView('dashboard',this)">Dashboard</button>
+      <button class="tab" data-view="analysis" onclick="switchView('analysis',this)">Cronoanálise</button>
+      <button class="tab" data-view="suppliers" onclick="switchView('suppliers',this)">Fornecedores</button>
+    </nav>
+
+    <section class="view" id="view-dashboard">
+      <div class="kpis" id="kpiGrid"></div>
+      <div class="panel" style="margin-bottom:18px">
+        <h2>Tempos médios por etapa</h2><p class="hint">Cálculo baseado nos recebimentos do período selecionado que possuem os horários necessários.</p>
+        <div class="stage-grid" id="stageMetrics"></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><h2>Notas apresentadas por hora</h2><p class="hint">Distribuição conforme o horário de apresentação da nota.</p><div class="chart-bars" id="hourChart"></div></div>
+        <div class="panel"><h2>Distribuição por etapa</h2><p class="hint">Posição atual dos recebimentos no fluxo.</p><div class="status-list" id="statusChart"></div></div>
+      </div>
+    </section>
+
+    <section class="view active" id="view-kanban">
+      <p class="hint" id="kanbanHint" style="margin-bottom:12px"></p>
+      <div class="kanban-wrap"><div class="kanban" id="kanbanBoard"></div></div>
+    </section>
+
+    <section class="view" id="view-analysis">
+      <div class="panel" style="margin-bottom:18px">
+        <h2>Recebimentos diários — total x descarga concluída</h2>
+        <p class="hint">Comparativo por dia dentro do período filtrado. Barra clara = notas apresentadas no dia; barra escura = quantas já tiveram a descarga finalizada.</p>
+        <div class="chart-bars" id="dailyChart" style="height:230px"></div>
+        <div style="display:flex;gap:18px;margin-top:10px;font-size:11px;color:var(--muted)">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#c7ccd4;margin-right:5px"></span>Total de recebimentos</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--navy);margin-right:5px"></span>Descarga concluída</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Relatório de cronoanálise</h2>
+        <p class="hint"><b>Padrão de leitura:</b> durações em horas, minutos e segundos — ex.: <b>01h 11min 00s</b>. O <b>ritmo de descarga</b> é volumes ÷ tempo entre início e final da descarga.</p>
+        <div class="table-wrap"><table class="data-table"><thead><tr>
+          <th>Recebimento</th><th class="col-loja" style="display:none">Loja</th><th>Fornecedor</th><th>NF</th><th>Departamento</th><th>Recebedor</th><th>Volumes</th>
+          <th>Apresentação da nota</th><th>Aguardando listagem</th><th>Início descarga</th><th>Final descarga</th>
+          <th>Apres. → listagem</th><th>Espera p/ descarga</th><th>Descarga</th><th>Ritmo</th><th>Ciclo total</th><th>SLA aplicável</th><th>Resultado</th>
+        </tr></thead><tbody id="analysisBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-suppliers">
+      <div class="panel">
+        <div class="client-tools">
+          <div><h2>Ranking de fornecedores</h2><p class="hint" style="margin-bottom:0">Baseado nos recebimentos do período filtrado. Médias consideram apenas os recebimentos que possuem os dois horários da etapa.</p></div>
+          <input class="search" id="supplierSearch" placeholder="Pesquisar fornecedor..." oninput="renderSuppliers()">
+        </div>
+        <div class="table-wrap"><table class="data-table" style="min-width:900px"><thead><tr>
+          <th>#</th><th>Fornecedor</th><th>Recebimentos</th><th>Volumes</th><th>Espera p/ descarga (média)</th><th>Descarga (média)</th><th>Ritmo</th><th>Ciclo total (médio)</th><th>Fora do SLA</th>
+        </tr></thead><tbody id="suppliersBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <div class="footer-note">Dados sincronizados com o Google Sheets. Utilize a exportação em Excel para arquivamento histórico.</div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal modal-wide">
+    <div class="modal-head"><h3 id="receiptModalTitle">Novo recebimento</h3><button type="button" class="close" onclick="closeModal('receiptModal')">×</button></div>
+    <div class="modal-body">
+      <div class="note" id="receiptModalNote">O horário de <b>apresentação da nota</b> é registrado automaticamente ao salvar. Depois, avance o card pelas etapas do Kanban.</div>
+      <div class="form-grid">
+        <div class="field span-2" id="receiptLojaField" style="display:none"><label>Loja *</label><select id="rcLoja"></select></div>
+        <div class="field"><label>Fornecedor *</label><input id="rcFornecedor" list="dlFornecedores" autocomplete="off"></div>
+        <div class="field"><label>Nº da nota fiscal *</label><input id="rcNF" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label>Transportadora</label><input id="rcTransportadora" list="dlTransportadoras" autocomplete="off"></div>
+        <div class="field"><label>Motorista</label><input id="rcMotorista" autocomplete="off"></div>
+        <div class="field"><label>Placa</label><input id="rcPlaca" maxlength="8" style="text-transform:uppercase" autocomplete="off"></div>
+        <div class="field"><label>Departamento</label><select id="rcDepartamento" onchange="onDepartamentoChange()"></select></div>
+        <div class="field" id="rcNovoDepartamentoField" style="display:none"><label>Nova categoria *</label><input id="rcNovoDepartamento" placeholder="Nome da nova categoria" autocomplete="off"></div>
+        <div class="field"><label>Volumes / paletes *</label><input type="number" id="rcVolumes" min="1" step="1" value="1"></div>
+        <div class="field"><label>Prioridade</label><select id="rcPrioridade"><option value="Normal">Normal</option><option value="Urgente">Urgente</option></select></div>
+        <div class="field span-2"><label>Recebedor (responsável pela descarga)</label><input id="rcRecebedor" list="dlRecebedores" autocomplete="off"></div>
+        <div class="field span-2"><label>Observação</label><textarea id="rcObservacao" rows="2"></textarea></div>
+        <div class="field span-2 edit-only" style="display:none"><label>SLA deste recebimento (minutos) — vazio = SLA do dia</label><input type="number" id="rcSla" min="0" step="1"></div>
+      </div>
+      <div id="receiptTimesBlock" style="display:none;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)">
+        <h4 style="margin:0 0 4px;font-size:13px;color:var(--navy)">Correção de horários</h4>
+        <p class="hint" style="margin:0 0 12px">Deixe em branco as etapas que ainda não aconteceram. Os horários precisam estar em ordem crescente.</p>
+        <div class="form-grid" id="receiptTimesGrid"></div>
+      </div>
+      <datalist id="dlFornecedores"></datalist><datalist id="dlTransportadoras"></datalist><datalist id="dlRecebedores"></datalist>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-danger" id="receiptDeleteBtn" style="display:none;margin-right:auto">Excluir</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('receiptModal')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveReceipt()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="divergenceModal">
+  <div class="modal" style="width:min(460px,100%)">
+    <div class="modal-head"><h3>Houve divergência no recebimento?</h3><button type="button" class="close" onclick="cancelDivergence()">×</button></div>
+    <div class="modal-body">
+      <p class="hint" id="divergenceLabel" style="margin-top:0"></p>
+      <div class="field"><label>Descrição da divergência (opcional — preencha se houve)</label><textarea id="divergenceText" rows="3" placeholder="Ex.: falta de 2 volumes, avaria, produto diferente da nota..."></textarea></div>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-outline" onclick="cancelDivergence()">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="confirmDivergence(true)">Sim, houve divergência</button>
+      <button type="button" class="btn btn-primary" onclick="confirmDivergence(false)">Não, sem divergência</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="dailySlaModal">
+  <div class="modal">
+    <div class="modal-head"><h3>SLA do dia</h3><button type="button" class="close" onclick="closeModal('dailySlaModal')">×</button></div>
+    <div class="modal-body">
+      <p class="hint" id="dailySlaLojaLabel" style="margin-top:0"></p>
+      <div class="form-grid">
+        <div class="field"><label>Data</label><input type="date" id="dailySlaDate"></div>
+        <div class="field"><label>SLA do ciclo total (minutos)</label><input type="number" id="dailySlaMinutes" min="1" step="1"></div>
+        <div class="field span-2"><label>Observação</label><input id="dailySlaNote"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('dailySlaModal')">Cancelar</button><button type="button" class="btn btn-primary" onclick="saveDailySla()">Salvar</button></div>
+  </div>
+</div>
+
+
+<div class="modal-backdrop" id="adminPanelModal">
+  <div class="modal modal-wide" style="width:min(1100px,100%)">
+    <div class="modal-head"><h3>🛡 Painel administrativo</h3><button type="button" class="close" onclick="closeModal('adminPanelModal')">×</button></div>
+    <div class="modal-body">
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-admintab="users" onclick="switchAdminTab('users',this)">Usuários</button>
+        <button class="admin-tab" data-admintab="lojas" onclick="switchAdminTab('lojas',this)">Lojas</button>
+        <button class="admin-tab" data-admintab="logs" onclick="switchAdminTab('logs',this)">Log de acessos</button>
+      </div>
+      <div id="adminTabUsers">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="openAdminCreateUser()">＋ Novo usuário</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr>
+          <th>Nome</th><th>Usuário</th><th>Telefone</th><th>E-mail</th><th>Perfil</th><th>Lojas</th><th>Status</th><th>Criado em</th><th>Último acesso</th><th>Ações</th>
+        </tr></thead><tbody id="adminUsersBody"></tbody></table></div>
+      </div>
+      <div id="adminTabLojas" style="display:none">
+        <div class="form-grid" style="margin-bottom:14px;align-items:end">
+          <div class="field"><label>Nome da nova loja</label><input id="newLojaNome" placeholder="Ex.: Rede Nilo — Barra do Garças"></div>
+          <button class="btn btn-primary" onclick="confirmCreateLoja()">＋ Criar loja</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>ID</th><th>Nome</th><th>Status</th><th>Criada em</th><th>Ações</th></tr></thead><tbody id="adminLojasBody"></tbody></table></div>
+      </div>
+      <div id="adminTabLogs" style="display:none">
+        <div class="table-wrap"><table class="data-table"><thead><tr>
+          <th>Data</th><th>Usuário</th><th>Resultado</th><th>Detalhe</th>
+        </tr></thead><tbody id="adminLogsBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('adminPanelModal')">Fechar</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="adminEditLojaModal">
+  <div class="modal" style="width:min(420px,100%)">
+    <div class="modal-head"><h3>Editar loja</h3><button type="button" class="close" onclick="closeModal('adminEditLojaModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field" style="margin-bottom:12px"><label>Nome da loja *</label><input id="editLojaNome"></div>
+      <div class="field" style="margin-bottom:12px"><label>Status</label><select id="editLojaStatus"><option value="Ativa">Ativa</option><option value="Inativa">Inativa</option></select></div>
+      <div class="field"><label>Ordem de exibição</label><input type="number" id="editLojaOrdem" min="1" step="1"></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('adminEditLojaModal')">Cancelar</button><button type="button" class="btn btn-primary" onclick="confirmEditLoja()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="adminResetPasswordModal">
+  <div class="modal" style="width:min(420px,100%)">
+    <div class="modal-head"><h3>Redefinir senha</h3><button type="button" class="close" onclick="closeModal('adminResetPasswordModal')">×</button></div>
+    <div class="modal-body">
+      <p class="hint" id="adminResetPasswordUserLabel" style="margin-top:0"></p>
+      <div class="field" style="margin-bottom:12px"><label>Nova senha</label><input type="password" id="adminResetPasswordValue" placeholder="Mínimo 6 caracteres"></div>
+      <div class="field"><label>Confirmar nova senha</label><input type="password" id="adminResetPasswordConfirm"></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('adminResetPasswordModal')">Cancelar</button><button type="button" class="btn btn-primary" onclick="confirmAdminResetPassword()">Salvar nova senha</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="adminCreateUserModal">
+  <div class="modal" style="width:min(480px,100%)">
+    <div class="modal-head"><h3>Novo usuário</h3><button type="button" class="close" onclick="closeModal('adminCreateUserModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field" style="margin-bottom:12px"><label>Nome completo *</label><input id="newUserNome"></div>
+      <div class="form-grid">
+        <div class="field"><label>Usuário *</label><input id="newUserUsuario"></div>
+        <div class="field"><label>Perfil *</label><select id="newUserPerfil"><option value="Colaborador">Colaborador</option><option value="Master">Master</option></select></div>
+        <div class="field"><label>Telefone</label><input id="newUserTelefone"></div>
+        <div class="field"><label>E-mail</label><input id="newUserEmail" type="email"></div>
+        <div class="field"><label>Senha *</label><input id="newUserSenha" type="password"></div>
+        <div class="field"><label>Confirmar senha *</label><input id="newUserSenhaConfirm" type="password"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:700;margin-top:6px">
+        <input type="checkbox" id="newUserAtivarImediatamente" checked style="width:15px;height:15px">
+        Ativar imediatamente (sem precisar autorizar depois)
+      </label>
+      <div class="field" style="margin-top:12px">
+        <label>Lojas autorizadas (deixe em branco para perfil Master, que já enxerga todas)</label>
+        <div id="newUserLojasList" style="display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:140px;overflow:auto"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('adminCreateUserModal')">Cancelar</button><button type="button" class="btn btn-primary" onclick="confirmAdminCreateUser()">Criar usuário</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="adminEditUserModal">
+  <div class="modal" style="width:min(480px,100%)">
+    <div class="modal-head"><h3>Editar usuário</h3><button type="button" class="close" onclick="closeModal('adminEditUserModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field" style="margin-bottom:12px"><label>Nome completo *</label><input id="editUserNome"></div>
+      <div class="form-grid">
+        <div class="field"><label>Usuário *</label><input id="editUserUsuario"></div>
+        <div class="field"><label>Perfil *</label><select id="editUserPerfil"><option value="Colaborador">Colaborador</option><option value="Master">Master</option></select></div>
+        <div class="field"><label>Telefone</label><input id="editUserTelefone"></div>
+        <div class="field"><label>E-mail</label><input id="editUserEmail" type="email"></div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Lojas autorizadas</label>
+        <div id="editUserLojasList" style="display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:140px;overflow:auto"></div>
+      </div>
+      <p class="hint" style="margin-top:10px;margin-bottom:0">Para trocar a senha, use o botão "Redefinir senha" na tabela.</p>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal('adminEditUserModal')">Cancelar</button><button type="button" class="btn btn-primary" onclick="confirmAdminEditUser()">Salvar alterações</button></div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ⚠️ Cole aqui a URL /exec da implantação do Apps Script de RECEBIMENTO (Code.gs desta entrega).
+const API_URL = 'https://script.google.com/macros/s/AKfycbzK3xgY-yOoPCWN-BY9FFBgfMX3SvLXRbQUAzUBkK5lKC6v6_fXu4TaKFPkxds9PvE1/exec';
+
+const SESSION_STORAGE_KEY = 'nilo_rec_session';
+const SNAPSHOT_KEY_PREFIX = 'nilo_rec_snapshot_';
+const DEFAULT_SLA_MIN = 240;     // meta padrão de ciclo total (apresentação da nota → final da descarga), em minutos
+const LISTING_ALERT_MIN = 60;    // alerta visual: card parado em "Aguardando listagem" há mais de X minutos
+const DEPARTAMENTOS = ['Mercearia','Bebidas','Perecíveis','Frios e laticínios','Hortifruti','Açougue','Padaria','Higiene e limpeza','Bazar','Outros'];
+
+const stages=[
+  {key:'ApresentacaoNota',   title:'Apresentação da nota', color:'#2962b8'},
+  {key:'AguardandoListagem', title:'Aguardando listagem',  color:'#dc7b14'},
+  {key:'InicioDescarga',     title:'Início da descarga',   color:'#7b4eb2'},
+  {key:'FinalDescarga',      title:'Final da descarga',    color:'#17834f'}
+];
+
+let receipts=[], dailySlas=[], allLojasCache=[];
+let currentSession=null, viewAllStores=false;
+let selectedReceiptId=null;
+let syncRequestSeq=0, lastAppliedSyncSeq=0, activeSyncController=null;
+const dirtySync=new Map();
+let pendingLoginUsuario='';
+let _appStarted=false;
+let draggedId=null;
+
+/* ---------- utilitários ---------- */
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function localDateStr(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function toLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+function ts(v){ if(!v) return null; const t=new Date(v).getTime(); return Number.isFinite(t)?t:null; }
+function fmtHoursMin(totalMinutes){const n=Math.round(Number(totalMinutes)||0);const h=Math.floor(n/60),m=n%60;return h>0?`${h}h ${String(m).padStart(2,'0')}min`:`${m}min`;}
+function fmtDuration(ms){
+  if(ms==null||!Number.isFinite(ms)||ms<0) return '—';
+  const s=Math.round(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}min ${String(sec).padStart(2,'0')}s`;
+}
+function fmtRate(volumes, ms){
+  if(!ms||ms<=0||!volumes) return '—';
+  const perH=volumes/(ms/3600000);
+  return perH>=1 ? `${perH.toFixed(1)} vol/h` : `${(perH*60).toFixed(1)} vol/min`;
+}
+function fmtTime(v){ const t=ts(v); return t==null?'—':new Date(t).toLocaleTimeString('pt-BR'); }
+function fmtDateTime(v){ const t=ts(v); return t==null?'—':new Date(t).toLocaleString('pt-BR'); }
+function avg(arr){ return arr.length? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function lojaNomeById(id){const l=allLojasCache.find(x=>String(x.ID)===String(id));return l?l.Nome:(id||'—');}
+function isMaster(){return !!currentSession && currentSession.perfil==='Master';}
+function lojasDoUsuario(){
+  const ativas=allLojasCache.filter(l=>l.Status!=='Inativa');
+  if(isMaster()) return ativas;
+  const aut=(currentSession&&currentSession.lojasAutorizadas)||[];
+  return ativas.filter(l=>aut.includes(l.ID));
+}
+
+/* ---------- API / sincronização ---------- */
+function getSessionToken(){ return currentSession ? currentSession.token : null; }
+async function api(action,payload){
+  if(API_URL.indexOf('COLE_AQUI')>=0) return {ok:false,error:'API_URL não configurada no index.html.'};
+  const finalPayload=Object.assign({},payload||{},{token:getSessionToken()});
+  try{
+    const res=await fetch(API_URL,{method:'POST',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,payload:finalPayload})});
+    const result=await res.json();
+    if(result&&result.reason==='unauthorized') handleSessionExpired();
+    return result;
+  }catch(err){ console.error('Falha de rede:',err); return {ok:false,error:String(err)}; }
+}
+
+function mergeFreshServerData_(data,requestSeq){
+  if(requestSeq<lastAppliedSyncSeq) return false;
+  lastAppliedSyncSeq=requestSeq;
+  receipts=(data.receipts||[]).map(server=>{
+    const dirty=dirtySync.get(String(server.ID));
+    if(!dirty) return server;
+    const serverUpdated=ts(server.AtualizadoEm)||0;
+    if(dirty.mutationAt && serverUpdated && serverUpdated<dirty.mutationAt){
+      const local=receipts.find(x=>String(x.ID)===String(server.ID));
+      return local||server;
+    }
+    return server;
+  });
+  dailySlas=data.dailySlas||[];
+  if(data.lojas) allLojasCache=data.lojas;
+  return true;
+}
+function snapshotKey(){ return SNAPSHOT_KEY_PREFIX+(currentSession?currentSession.id:''); }
+function paintFromLocalSnapshot_(){
+  try{
+    const raw=localStorage.getItem(snapshotKey()); if(!raw) return;
+    mergeFreshServerData_(JSON.parse(raw),0);
+    document.getElementById('syncStatus').textContent='Sincronizando...';
+    renderAll();
+  }catch(e){}
+}
+async function loadAll(){
+  if(!currentSession) return;
+  if(API_URL.indexOf('COLE_AQUI')>=0){ document.getElementById('syncStatus').textContent='Configure a API_URL no index.html'; return; }
+  const requestSeq=++syncRequestSeq;
+  if(activeSyncController){ try{activeSyncController.abort();}catch(e){} }
+  activeSyncController=new AbortController();
+  const controller=activeSyncController;
+  document.getElementById('syncStatus').textContent='Sincronizando...';
+  try{
+    const url=API_URL+'?token='+encodeURIComponent(currentSession.token)+'&_sync='+Date.now()+'_'+requestSeq;
+    const res=await fetch(url,{cache:'no-store',signal:controller.signal});
+    const data=await res.json();
+    if(requestSeq!==syncRequestSeq) return;
+    if(data&&data.error==='unauthorized'){ handleSessionExpired(); return; }
+    if(data&&data.error){ document.getElementById('syncStatus').textContent='Erro no servidor: '+data.error; return; }
+    if(mergeFreshServerData_(data,requestSeq)){
+      document.getElementById('syncStatus').textContent='Sincronizado com a planilha';
+      try{ localStorage.setItem(snapshotKey(),JSON.stringify(data)); }catch(e){}
+    }
+  }catch(err){
+    if(err&&err.name==='AbortError') return;
+    document.getElementById('syncStatus').textContent='Falha ao conectar à planilha — verifique API_URL';
+    console.error(err);
+  }finally{ if(activeSyncController===controller) activeSyncController=null; }
+  if(requestSeq!==syncRequestSeq) return;
+  refreshUserBadge();
+  renderAll();
+}
+
+/* ---------- escopo de loja / filtros ---------- */
+function inCurrentLoja(lojaId){
+  if(isMaster() && viewAllStores) return true;
+  if(!currentSession||!currentSession.loja) return true;
+  return String(lojaId||'LOJA-1')===String(currentSession.loja);
+}
+function toggleViewAllStores(){ viewAllStores=document.getElementById('viewAllStores').checked; renderAll(); }
+function currentRange(){
+  const s=document.getElementById('dateStart').value,e=document.getElementById('dateEnd').value;
+  return {start:s?new Date(s+'T00:00:00'):null,end:e?new Date(e+'T23:59:59'):null};
+}
+function setQuickDate(kind){
+  const today=new Date();
+  const set=(a,b)=>{document.getElementById('dateStart').value=localDateStr(a);document.getElementById('dateEnd').value=localDateStr(b);};
+  if(kind==='today') set(today,today);
+  else if(kind==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);set(d,d);}
+  else if(kind==='7days'){const d=new Date();d.setDate(d.getDate()-6);set(d,today);}
+  renderAll();
+}
+function clearFilters(){document.getElementById('dateStart').value='';document.getElementById('dateEnd').value='';renderAll();}
+function filteredReceipts(){
+  const {start,end}=currentRange();
+  return receipts.filter(o=>{
+    if(!inCurrentLoja(o.LojaID)) return false;
+    const t=ts(o.ApresentacaoNota);
+    if(t==null) return true;
+    if(start&&t<start.getTime()) return false;
+    if(end&&t>end.getTime()) return false;
+    return true;
+  });
+}
+function switchView(view,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  renderAll();
+}
+
+/* ---------- regras de negócio ---------- */
+function inferStatus(o){let s=0;stages.forEach((st,i)=>{if(o[st.key])s=i;});return s;}
+function isDone(o){return !!o.FinalDescarga;}
+function dailySlaFor(dateStr,lojaId){
+  const rec=dailySlas.find(d=>String(d.Data).slice(0,10)===dateStr && String(d.LojaID||'LOJA-1')===String(lojaId||'LOJA-1'));
+  return rec?(Number(rec.Minutos)||DEFAULT_SLA_MIN):null;
+}
+function slaMinutesOf(o){
+  const n=Number(o.SlaMinutos);
+  if(Number.isFinite(n)&&n>0) return n;
+  const t=ts(o.ApresentacaoNota);
+  const d=t?localDateStr(new Date(t)):localDateStr(new Date());
+  return dailySlaFor(d,o.LojaID)||DEFAULT_SLA_MIN;
+}
+function todaysSlaMinutes(){ return dailySlaFor(localDateStr(new Date()),currentSession&&currentSession.loja); }
+function dueAt(o){const t=ts(o.ApresentacaoNota);return t==null?null:t+slaMinutesOf(o)*60000;}
+function isLate(o){ if(isDone(o)) return false; const due=dueAt(o); return due!=null && Date.now()>due; }
+function finishedOnTime(o){ const due=dueAt(o),f=ts(o.FinalDescarga); return due!=null&&f!=null&&f<=due; }
+function dur(o,from,to){const a=ts(o[from]),b=ts(o[to]);return (a!=null&&b!=null&&b>=a)?b-a:null;}
+function volumesOf(o){return Number(o.Volumes)||0;}
+
+/* ---------- Dashboard ---------- */
+function renderKpis(){
+  const list=filteredReceipts();
+  const total=list.length, done=list.filter(isDone);
+  const late=list.filter(isLate).length;
+  const urgent=list.filter(o=>o.Prioridade==='Urgente').length;
+  const onTime=done.filter(finishedOnTime).length;
+  const pct=done.length>0?Math.round(onTime/done.length*100):0;
+  const unl=list.filter(o=>dur(o,'InicioDescarga','FinalDescarga')!=null);
+  const unlVol=unl.reduce((s,o)=>s+volumesOf(o),0);
+  const unlMs=unl.reduce((s,o)=>s+dur(o,'InicioDescarga','FinalDescarga'),0);
+  const cycleAvg=avg(done.map(o=>dur(o,'ApresentacaoNota','FinalDescarga')).filter(x=>x!=null));
+  const kpis=[
+    {label:'Recebimentos no período',value:total,sub:'Total filtrado',cls:''},
+    {label:'Descarga concluída',value:done.length,sub:`${total-done.length} em andamento`,cls:'good'},
+    {label:'Em atraso (SLA)',value:late,sub:'Ainda não finalizados',cls:late>0?'bad':'good'},
+    {label:'Prioridade urgente',value:urgent,sub:'No período',cls:urgent>0?'warn':''},
+    {label:'% dentro do SLA',value:pct+'%',sub:`${onTime} de ${done.length} concluídos`,cls:pct>=80?'good':(pct>=50?'warn':'bad')},
+    {label:'Volumes descarregados',value:unlVol,sub:`Ritmo: ${fmtRate(unlVol,unlMs)}`,cls:''},
+    {label:'Ciclo médio',value:cycleAvg==null?'—':fmtHoursMin(cycleAvg/60000),sub:'Apresentação → final da descarga',cls:''}
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`<div class="kpi ${k.cls}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub">${k.sub}</div></div>`).join('');
+}
+function renderStageMetrics(){
+  const list=filteredReceipts();
+  const pairs=[['ApresentacaoNota','AguardandoListagem','Apresentação → aguardando listagem'],['AguardandoListagem','InicioDescarga','Espera p/ início da descarga'],['InicioDescarga','FinalDescarga','Descarga'],['ApresentacaoNota','FinalDescarga','Ciclo total']];
+  document.getElementById('stageMetrics').innerHTML=pairs.map(([a,b,label])=>{
+    const durs=list.map(o=>dur(o,a,b)).filter(x=>x!=null);
+    return `<div class="stage-metric"><div class="name">${label}</div><div class="time">${fmtDuration(avg(durs))}</div><div class="count">${durs.length} recebimento(s)</div></div>`;
+  }).join('');
+}
+function renderHourChart(){
+  const counts=new Array(24).fill(0);
+  filteredReceipts().forEach(o=>{const t=ts(o.ApresentacaoNota);if(t!=null)counts[new Date(t).getHours()]++;});
+  const max=Math.max(1,...counts);
+  document.getElementById('hourChart').innerHTML=counts.map((c,h)=>`<div class="bar-col"><div class="bar" style="height:${Math.max(2,(c/max)*180)}px" title="${c} nota(s)"></div><div class="bar-label">${String(h).padStart(2,'0')}h</div></div>`).join('');
+}
+function renderStatusChart(){
+  const counts=stages.map(()=>0);
+  filteredReceipts().forEach(o=>counts[inferStatus(o)]++);
+  const max=Math.max(1,...counts);
+  document.getElementById('statusChart').innerHTML=stages.map((st,i)=>`<div class="status-row"><div>${st.title}</div><div class="status-track"><div class="status-fill" style="width:${(counts[i]/max)*100}%;background:${st.color}"></div></div><div class="status-count">${counts[i]}</div></div>`).join('');
+}
+function renderDailySla(){
+  const el=document.getElementById('dailySlaDisplay');
+  if(isMaster()&&viewAllStores){ el.innerHTML='<div class="daily-label">SLA do dia (ciclo total)</div><div class="daily-value">Definido por loja</div>'; return; }
+  const v=todaysSlaMinutes();
+  el.innerHTML=`<div class="daily-label">SLA do dia (ciclo total)</div><div class="daily-value">${v?fmtHoursMin(v):fmtHoursMin(DEFAULT_SLA_MIN)+' (padrão)'}</div>`;
+}
+
+/* ---------- Kanban ---------- */
+function kanbanReceipts(){
+  const {start,end}=currentRange();
+  const list=filteredReceipts();
+  const hint=document.getElementById('kanbanHint');
+  if(start||end){ hint.textContent='Filtro de data ativo: exibindo todos os recebimentos do período, inclusive os já concluídos.'; return list; }
+  hint.textContent='Mostrando recebimentos pendentes + concluídos de hoje. Use os filtros de data acima para ver concluídos de outros dias.';
+  const today=new Date().toDateString();
+  return list.filter(o=>!isDone(o)||new Date(o.FinalDescarga).toDateString()===today);
+}
+function renderKanban(){
+  const list=kanbanReceipts();
+  const now=Date.now();
+  const showLoja=isMaster()&&viewAllStores;
+  document.getElementById('kanbanBoard').innerHTML=stages.map((st,i)=>{
+    const items=list.filter(o=>inferStatus(o)===i)
+      .sort((a,b)=>(a.Prioridade==='Urgente'?0:1)-(b.Prioridade==='Urgente'?0:1) || (ts(a.ApresentacaoNota)||0)-(ts(b.ApresentacaoNota)||0));
+    const cards=items.map(o=>{
+      const done=isDone(o), late=isLate(o);
+      const start=ts(o.ApresentacaoNota);
+      const nowRef=done?ts(o.FinalDescarga):now;
+      const totalElapsed=start!=null?nowRef-start:null;
+      const isLast=i>=stages.length-1;
+      const enteredAt=ts(o[st.key])||start;
+      const stageElapsed=isLast?dur(o,'InicioDescarga','FinalDescarga'):(enteredAt!=null?nowRef-enteredAt:null);
+      const slaMin=slaMinutesOf(o);
+      const isCustomSla=Number(o.SlaMinutos)>0;
+      const due=dueAt(o);
+      const vol=volumesOf(o);
+      const hasRecebedor=o.Recebedor&&String(o.Recebedor).trim();
+      const listingWait=(i===1&&stageElapsed!=null&&stageElapsed>=LISTING_ALERT_MIN*60000)
+        ?`<div class="stage-alert-bar">⚠ AGUARDANDO LISTAGEM HÁ MAIS DE ${fmtHoursMin(LISTING_ALERT_MIN)}</div>`:'';
+      let blink='';
+      if(!done&&totalElapsed!=null){
+        if(o.Prioridade==='Urgente'||late) blink='blink-red';
+        else if(totalElapsed>=slaMin*60000*0.75) blink='blink-yellow';
+      }
+      const blinkDot=blink?`<span class="blink-dot ${blink}" title="${blink==='blink-red'?'Atenção: urgente ou acima do SLA':'Atenção: já consumiu 75% do SLA'}"></span>`:'';
+      const id=esc(o.ID);
+      return `<div class="order-card ${o.Prioridade==='Urgente'?'priority':''} ${late?'late':''}" draggable="true" ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
+        <div class="order-top"><span class="order-id">${id}</span><span style="display:flex;align-items:center;gap:6px">${blinkDot}<span class="order-type-pill">${esc(o.Departamento||'Sem depto.')}</span><button class="card-priority ${o.Prioridade==='Urgente'?'is-urgent':''}" title="${o.Prioridade==='Urgente'?'Marcar como Normal':'Marcar como Urgente'}" onclick="event.stopPropagation();togglePriority('${id}')">⚑</button><button class="card-delete" title="Excluir recebimento" onclick="event.stopPropagation();quickDelete('${id}')">×</button></span></div>
+        <div class="order-client">${esc(o.Fornecedor)}</div>
+        ${showLoja?`<div class="order-line"><span class="ic">🏬</span><b>${esc(lojaNomeById(o.LojaID))}</b></div>`:''}
+        <div class="order-line"><span class="ic">🧾</span>NF ${esc(o.NumeroNF)}</div>
+        <div class="order-line"><span class="ic">🚚</span>${esc(o.Transportadora||'—')}${o.Motorista?` · ${esc(o.Motorista)}`:''}${o.Placa?` · ${esc(o.Placa)}`:''}</div>
+        ${o.Prioridade==='Urgente'?`<div class="order-urgent">URGENTE</div>`:''}
+        <div class="order-line assign" style="cursor:pointer" onclick="openReceiptModal('${id}')" title="Clique para definir o recebedor">${(!hasRecebedor&&i>=2)?'<span class="ic-blink-red"></span>':''}<span class="ic">👤</span><span class="${hasRecebedor?'set':'missing'}">${hasRecebedor?('Recebedor: '+esc(o.Recebedor)):'Recebedor não definido'}</span><span class="ic" style="margin-left:6px">📦</span>${vol} volume(s)</div>
+        ${listingWait}
+        ${(isLast&&o.Divergencia==='Sim')?`<div class="stage-alert-bar" title="${esc(o.DivergenciaDescricao||'')}">⚠ DIVERGÊNCIA NO RECEBIMENTO${o.DivergenciaDescricao?': '+esc(String(o.DivergenciaDescricao).slice(0,60)):''}</div>`:''}
+        <div class="timer-box">
+          <div><div class="timer-label">Tempo total</div><div class="timer-value" style="${late?'color:var(--red)':''}">${fmtDuration(totalElapsed)}</div></div>
+          <div><div class="timer-label">${isLast?'Descarga':'Na etapa'}</div><div class="timer-value">${fmtDuration(stageElapsed)}</div></div>
+        </div>
+        <div class="order-sub">Apresentada: <b>${fmtTime(o.ApresentacaoNota)}</b> &nbsp; SLA: <b>${fmtDuration(slaMin*60000)}</b></div>
+        <div class="order-sub">Prazo: <b>${due!=null?new Date(due).toLocaleTimeString('pt-BR'):'—'}</b> &nbsp; ${isCustomSla?'SLA do recebimento':'SLA do dia'}${done?` &nbsp; <b style="color:${finishedOnTime(o)?'var(--green)':'var(--red)'}">${finishedOnTime(o)?'no prazo':'fora do prazo'}</b>`:''}</div>
+        <div class="order-actions">
+          <button class="btn" onclick="openReceiptModal('${id}')">Detalhes</button>
+          ${isLast?`<button class="btn btn-done" disabled>Concluído</button>`:`<button class="btn btn-advance" onclick="advanceStage('${id}')">Avançar</button>`}
+          ${i>0?`<button class="btn" style="grid-column:span 2" onclick="backStage('${id}')">↩ Voltar etapa</button>`:''}
+        </div>
+      </div>`;
+    }).join('')||'<div class="empty">Sem recebimentos</div>';
+    return `<div class="kanban-col" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropOn(event,${i})">
+      <div class="col-head"><div class="col-title"><span class="dot" style="background:${st.color}"></span>${st.title}</div><span class="badge">${items.length}</span></div>
+      <div class="cards">${cards}</div>
+    </div>`;
+  }).join('');
+}
+function dragStart(e,id){draggedId=id;e.target.classList.add('dragging');}
+function dragEnd(e){draggedId=null;if(e.target&&e.target.classList)e.target.classList.remove('dragging');}
+function dropOn(e,stageIndex){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  if(!draggedId) return;
+  const id=draggedId; draggedId=null;
+  setStage(id,stageIndex);
+}
+let pendingDivergenceId=null;
+function setStage(id,index,opts){
+  const o=receipts.find(x=>String(x.ID)===String(id)); if(!o) return;
+  const prev=inferStatus(o);
+  if(index===prev) return;
+  if(index===stages.length-1 && prev<index && !opts){ askDivergence(o); return; }
+  for(let i=1;i<=index;i++){ if(!o[stages[i].key]) o[stages[i].key]=new Date().toISOString(); }
+  for(let i=index+1;i<stages.length;i++){ o[stages[i].key]=''; }
+  if(index===stages.length-1 && opts){ o.Divergencia=opts.divergencia?'Sim':'Não'; o.DivergenciaDescricao=opts.divergencia?(opts.descricao||''):''; }
+  else if(index<stages.length-1){ o.Divergencia=''; o.DivergenciaDescricao=''; }
+  if(!o.ApresentacaoNota) o.ApresentacaoNota=new Date().toISOString();
+  if(index===2&&!(o.Recebedor&&String(o.Recebedor).trim())) showToast('Descarga iniciada — lembre de definir o recebedor.');
+  persistReceipt(o);
+}
+function askDivergence(o){
+  pendingDivergenceId=o.ID;
+  document.getElementById('divergenceLabel').textContent=`${o.ID} — ${o.Fornecedor} (NF ${o.NumeroNF})`;
+  document.getElementById('divergenceText').value='';
+  openModal('divergenceModal');
+}
+function cancelDivergence(){ pendingDivergenceId=null; closeModal('divergenceModal'); }
+function confirmDivergence(had){
+  const id=pendingDivergenceId; if(!id) return;
+  const descricao=document.getElementById('divergenceText').value.trim();
+  pendingDivergenceId=null; closeModal('divergenceModal');
+  setStage(id,stages.length-1,{divergencia:had,descricao});
+}
+function advanceStage(id){const o=receipts.find(x=>String(x.ID)===String(id));if(!o)return;setStage(id,Math.min(stages.length-1,inferStatus(o)+1));}
+function backStage(id){const o=receipts.find(x=>String(x.ID)===String(id));if(!o)return;setStage(id,Math.max(0,inferStatus(o)-1));}
+
+async function persistReceipt(o){
+  const mutationAt=Date.now();
+  dirtySync.set(String(o.ID),{mutationAt});
+  renderAll();
+  const res=await api('saveReceipt',o);
+  if(!res.ok){
+    dirtySync.delete(String(o.ID));
+    showToast('Falha ao salvar na planilha'+(res.error?': '+String(res.error).slice(0,120):''));
+    await loadAll();
+    return res;
+  }
+  await loadAll();
+  dirtySync.delete(String(o.ID));
+  renderAll();
+  return res;
+}
+async function togglePriority(id){
+  const o=receipts.find(x=>String(x.ID)===String(id)); if(!o) return;
+  o.Prioridade=o.Prioridade==='Urgente'?'Normal':'Urgente';
+  const res=await persistReceipt(o);
+  if(res&&res.ok) showToast(o.Prioridade==='Urgente'?`${id} marcado como URGENTE.`:`${id} voltou a ser Normal.`);
+}
+async function quickDelete(id){
+  if(!confirm(`Excluir o recebimento ${id} definitivamente?`)) return;
+  receipts=receipts.filter(x=>String(x.ID)!==String(id)); renderAll();
+  const res=await api('deleteReceipt',{id});
+  showToast(res.ok?'Recebimento excluído.':(res.error||'Falha ao excluir na planilha'));
+  if(!res.ok) loadAll();
+}
+
+/* ---------- Cronoanálise ---------- */
+function renderDailyChart(){
+  const byDay={};
+  filteredReceipts().forEach(o=>{
+    const t=ts(o.ApresentacaoNota); if(t==null) return;
+    const k=localDateStr(new Date(t));
+    if(!byDay[k]) byDay[k]={total:0,done:0};
+    byDay[k].total++; if(isDone(o)) byDay[k].done++;
+  });
+  const days=Object.keys(byDay).sort(), el=document.getElementById('dailyChart');
+  if(!days.length){ el.innerHTML='<div class="empty" style="width:100%">Sem recebimentos no período filtrado</div>'; return; }
+  const max=Math.max(1,...days.map(d=>byDay[d].total));
+  el.innerHTML=days.map(d=>{
+    const {total,done}=byDay[d];
+    const label=new Date(d+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    return `<div class="bar-col"><div class="daily-bar-group" title="${label}: ${total} total, ${done} concluído(s)"><div class="daily-bar total" style="height:${Math.max(2,(total/max)*190)}px"></div><div class="daily-bar delivered" style="height:${Math.max(2,(done/max)*190)}px"></div></div><div class="bar-label">${label}</div></div>`;
+  }).join('');
+}
+function renderAnalysis(){
+  const showLoja=isMaster()&&viewAllStores;
+  document.querySelectorAll('#view-analysis .col-loja').forEach(th=>th.style.display=showLoja?'':'none');
+  const list=filteredReceipts().slice().sort((a,b)=>(ts(b.ApresentacaoNota)||0)-(ts(a.ApresentacaoNota)||0));
+  document.getElementById('analysisBody').innerHTML=list.map(o=>{
+    const cycle=dur(o,'ApresentacaoNota','FinalDescarga'), unl=dur(o,'InicioDescarga','FinalDescarga');
+    let result='<span class="hint" style="margin:0">Em andamento</span>';
+    if(isDone(o)) result=finishedOnTime(o)?'<span class="sla-ok">Dentro do SLA</span>':'<span class="sla-bad">Fora do SLA</span>';
+    else if(isLate(o)) result='<span class="sla-bad">Em atraso</span>';
+    return `<tr>
+      <td>${esc(o.ID)}</td>${showLoja?`<td>${esc(lojaNomeById(o.LojaID))}</td>`:''}<td>${esc(o.Fornecedor)}</td><td>${esc(o.NumeroNF)}</td><td>${esc(o.Departamento||'—')}</td><td>${esc(o.Recebedor||'—')}</td><td>${volumesOf(o)}</td>
+      <td>${fmtDateTime(o.ApresentacaoNota)}</td><td>${fmtDateTime(o.AguardandoListagem)}</td><td>${fmtDateTime(o.InicioDescarga)}</td><td>${fmtDateTime(o.FinalDescarga)}</td>
+      <td>${fmtDuration(dur(o,'ApresentacaoNota','AguardandoListagem'))}</td><td>${fmtDuration(dur(o,'AguardandoListagem','InicioDescarga'))}</td><td>${fmtDuration(unl)}</td><td>${fmtRate(volumesOf(o),unl)}</td><td>${fmtDuration(cycle)}</td>
+      <td>${fmtDuration(slaMinutesOf(o)*60000)}</td><td>${result}</td></tr>`;
+  }).join('')||`<tr><td colspan="${showLoja?18:17}" class="empty">Nenhum recebimento no período</td></tr>`;
+}
+
+/* ---------- Fornecedores ---------- */
+function supplierStats(){
+  const q=(document.getElementById('supplierSearch').value||'').trim().toLowerCase();
+  const map={};
+  filteredReceipts().forEach(o=>{
+    const name=String(o.Fornecedor||'').trim(); if(!name) return;
+    if(q && !name.toLowerCase().includes(q)) return;
+    const k=name.toLowerCase();
+    (map[k]=map[k]||{name,list:[]}).list.push(o);
+  });
+  return Object.values(map).map(s=>{
+    const done=s.list.filter(isDone);
+    const unl=s.list.filter(o=>dur(o,'InicioDescarga','FinalDescarga')!=null);
+    const unlVol=unl.reduce((a,o)=>a+volumesOf(o),0), unlMs=unl.reduce((a,o)=>a+dur(o,'InicioDescarga','FinalDescarga'),0);
+    return {
+      name:s.name, count:s.list.length, volumes:s.list.reduce((a,o)=>a+volumesOf(o),0),
+      wait:avg(s.list.map(o=>dur(o,'AguardandoListagem','InicioDescarga')).filter(x=>x!=null)),
+      unload:avg(unl.map(o=>dur(o,'InicioDescarga','FinalDescarga'))),
+      rate:fmtRate(unlVol,unlMs),
+      cycle:avg(done.map(o=>dur(o,'ApresentacaoNota','FinalDescarga')).filter(x=>x!=null)),
+      late:done.filter(o=>!finishedOnTime(o)).length, doneCount:done.length
+    };
+  }).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'pt-BR'));
+}
+function renderSuppliers(){
+  const rows=supplierStats();
+  document.getElementById('suppliersBody').innerHTML=rows.map((s,i)=>`<tr>
+    <td>${i+1}</td><td><b>${esc(s.name)}</b></td><td>${s.count}</td><td>${s.volumes}</td><td>${fmtDuration(s.wait)}</td><td>${fmtDuration(s.unload)}</td><td>${s.rate}</td><td>${fmtDuration(s.cycle)}</td>
+    <td>${s.doneCount?`<span class="${s.late>0?'sla-bad':'sla-ok'}">${s.late} de ${s.doneCount}</span>`:'—'}</td></tr>`).join('')||'<tr><td colspan="9" class="empty">Nenhum fornecedor no período</td></tr>';
+}
+
+/* ---------- modal de recebimento (novo / detalhes) ---------- */
+function fillDatalists(){
+  const scope=receipts.filter(o=>inCurrentLoja(o.LojaID)||isMaster());
+  const uniq=f=>Array.from(new Set(scope.map(o=>String(o[f]||'').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+  const opts=a=>a.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  document.getElementById('dlFornecedores').innerHTML=opts(uniq('Fornecedor'));
+  document.getElementById('dlTransportadoras').innerHTML=opts(uniq('Transportadora'));
+  document.getElementById('dlRecebedores').innerHTML=opts(uniq('Recebedor'));
+}
+// Categorias = padrão + as já usadas em recebimentos (compartilhadas entre usuários) + opção de cadastrar nova.
+function departamentosConhecidos(){
+  const lista=DEPARTAMENTOS.slice();
+  const usados=Array.from(new Set(receipts.map(o=>String(o.Departamento||'').trim()).filter(Boolean)))
+    .filter(d=>!lista.some(x=>x.toLowerCase()===d.toLowerCase()))
+    .sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+  return lista.concat(usados);
+}
+function fillDepartamentos(){
+  document.getElementById('rcDepartamento').innerHTML=departamentosConhecidos().map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('')+'<option value="__novo__">＋ Cadastrar nova categoria...</option>';
+}
+function onDepartamentoChange(){
+  const novo=document.getElementById('rcDepartamento').value==='__novo__';
+  document.getElementById('rcNovoDepartamentoField').style.display=novo?'flex':'none';
+  if(novo) document.getElementById('rcNovoDepartamento').focus();
+}
+function openReceiptModal(id){
+  selectedReceiptId=id||null;
+  const o=id?receipts.find(x=>String(x.ID)===String(id)):null;
+  if(id&&!o) return;
+  fillDatalists();
+  const lojas=lojasDoUsuario();
+  const sel=document.getElementById('rcLoja');
+  sel.innerHTML=lojas.map(l=>`<option value="${esc(l.ID)}">${esc(l.Nome)}</option>`).join('');
+  sel.value=o?o.LojaID:(currentSession.loja||'');
+  document.getElementById('receiptLojaField').style.display=(lojas.length>1&&!o)?'block':'none';
+  const set=(k,v)=>document.getElementById(k).value=v??'';
+  set('rcFornecedor',o?o.Fornecedor:''); set('rcNF',o?o.NumeroNF:''); set('rcTransportadora',o?o.Transportadora:'');
+  set('rcMotorista',o?o.Motorista:''); set('rcPlaca',o?o.Placa:'');
+  const dep=o&&o.Departamento;
+  fillDepartamentos();
+  set('rcDepartamento',dep||DEPARTAMENTOS[0]);
+  set('rcNovoDepartamento','');
+  onDepartamentoChange();
+  set('rcVolumes',o?(volumesOf(o)||1):1);
+  set('rcRecebedor',o?o.Recebedor:''); set('rcPrioridade',o?(o.Prioridade||'Normal'):'Normal'); set('rcObservacao',o?o.Observacao:'');
+  set('rcSla',o&&Number(o.SlaMinutos)>0?o.SlaMinutos:'');
+  document.querySelectorAll('#receiptModal .edit-only').forEach(el=>el.style.display=o?'flex':'none');
+  document.getElementById('receiptTimesBlock').style.display=o?'block':'none';
+  document.getElementById('receiptDeleteBtn').style.display=o?'inline-flex':'none';
+  document.getElementById('receiptModalTitle').textContent=o?`Detalhes — ${o.ID}`:'Novo recebimento';
+  document.getElementById('receiptModalNote').style.display=o?'none':'block';
+  if(o){
+    document.getElementById('receiptTimesGrid').innerHTML=stages.map(st=>`<div class="field"><label>${st.title}</label><input type="datetime-local" id="dt-${st.key}" value="${toLocalInput(o[st.key])}"></div>`).join('');
+    document.getElementById('receiptDeleteBtn').onclick=()=>{closeModal('receiptModal');quickDelete(o.ID);};
+  }
+  openModal('receiptModal');
+}
+async function saveReceipt(){
+  const v=id=>document.getElementById(id).value.trim();
+  const fornecedor=v('rcFornecedor'), nf=v('rcNF'), volumes=Number(v('rcVolumes'));
+  if(!fornecedor||!nf){ showToast('Informe o fornecedor e o número da nota.'); return; }
+  if(!Number.isFinite(volumes)||volumes<1){ showToast('Informe a quantidade de volumes (mínimo 1).'); return; }
+  let departamento=v('rcDepartamento');
+  if(departamento==='__novo__'){
+    const nome=v('rcNovoDepartamento').replace(/\s+/g,' ');
+    if(!nome){ showToast('Informe o nome da nova categoria.'); return; }
+    departamento=departamentosConhecidos().find(d=>d.toLowerCase()===nome.toLowerCase())||nome;
+  }
+  const existing=selectedReceiptId?receipts.find(x=>String(x.ID)===String(selectedReceiptId)):null;
+  const lojaId=existing?existing.LojaID:(document.getElementById('rcLoja').value||currentSession.loja);
+  const dup=receipts.find(x=>(!existing||x.ID!==existing.ID)&&String(x.LojaID)===String(lojaId)&&String(x.NumeroNF).trim()===nf&&String(x.Fornecedor).trim().toLowerCase()===fornecedor.toLowerCase());
+  if(dup&&!confirm(`Já existe o recebimento ${dup.ID} com a NF ${nf} deste fornecedor nesta loja. Deseja salvar mesmo assim?`)) return;
+  const slaRaw=existing?v('rcSla'):'';
+  const data={
+    Fornecedor:fornecedor, NumeroNF:nf, Transportadora:v('rcTransportadora'), Motorista:v('rcMotorista'), Placa:v('rcPlaca').toUpperCase(),
+    Departamento:departamento, Volumes:volumes, Recebedor:v('rcRecebedor'),
+    Prioridade:v('rcPrioridade'), Observacao:v('rcObservacao'), LojaID:lojaId
+  };
+  let payload;
+  if(existing){
+    payload=Object.assign({},existing,data,{SlaMinutos:slaRaw?Number(slaRaw):''});
+    const times=stages.map(st=>{const x=document.getElementById('dt-'+st.key).value;return x?new Date(x).toISOString():'';});
+    if(!times[0]){ showToast('A apresentação da nota é obrigatória.'); return; }
+    let last=0;
+    for(let i=0;i<times.length;i++){
+      if(!times[i]) continue;
+      const t=new Date(times[i]).getTime();
+      if(t<last){ showToast(`O horário de "${stages[i].title}" está anterior à etapa anterior.`); return; }
+      last=t;
+    }
+    stages.forEach((st,i)=>payload[st.key]=times[i]);
+  }else{
+    payload=Object.assign({},data,{ApresentacaoNota:new Date().toISOString(),AguardandoListagem:'',InicioDescarga:'',FinalDescarga:''});
+  }
+  closeModal('receiptModal');
+  document.getElementById('syncStatus').textContent='Salvando...';
+  const res=existing?await persistReceipt(payload):await api('saveReceipt',payload);
+  if(res&&res.ok){ showToast(existing?'Recebimento atualizado.':`Recebimento ${res.id} registrado.`); if(!existing) await loadAll(); }
+  else if(!existing) showToast('Falha ao salvar: '+String((res&&res.error)||'erro desconhecido').slice(0,120));
+}
+
+/* ---------- SLA do dia ---------- */
+function openDailySlaModal(){
+  if(isMaster()&&viewAllStores){ showToast('Desmarque "Ver todas as lojas" para cadastrar o SLA de uma loja.'); return; }
+  document.getElementById('dailySlaDate').value=localDateStr(new Date());
+  document.getElementById('dailySlaMinutes').value=todaysSlaMinutes()||DEFAULT_SLA_MIN;
+  document.getElementById('dailySlaNote').value='';
+  document.getElementById('dailySlaLojaLabel').textContent='Loja: '+lojaNomeById(currentSession.loja)+' — a meta vale para o ciclo total (apresentação da nota → final da descarga).';
+  openModal('dailySlaModal');
+}
+async function saveDailySla(){
+  const Data=document.getElementById('dailySlaDate').value, Minutos=Number(document.getElementById('dailySlaMinutes').value);
+  if(!Data||!Number.isFinite(Minutos)||Minutos<=0){ showToast('Informe a data e um SLA maior que zero.'); return; }
+  const res=await api('saveDailySla',{Data,Minutos,Observacao:document.getElementById('dailySlaNote').value.trim(),LojaID:currentSession.loja});
+  if(res.ok){ closeModal('dailySlaModal'); showToast('SLA do dia salvo.'); await loadAll(); }
+  else showToast(res.error||'Falha ao salvar SLA.');
+}
+
+/* ---------- exportação ---------- */
+function exportExcel(){
+  const list=filteredReceipts();
+  const min=ms=>ms==null?'':Math.round(ms/600)/100;
+  const header=['ID','Loja','Fornecedor','NF','Transportadora','Motorista','Placa','Departamento','Volumes','Recebedor','Prioridade','SLA (min)','Apresentação da nota','Aguardando listagem','Início descarga','Final descarga','Apres.→listagem (min)','Espera p/ descarga (min)','Descarga (min)','Ciclo total (min)','Resultado','Observação','Divergência','Descrição da divergência'];
+  const rows=[header,...list.map(o=>[o.ID,lojaNomeById(o.LojaID),o.Fornecedor,o.NumeroNF,o.Transportadora,o.Motorista,o.Placa,o.Departamento,volumesOf(o),o.Recebedor,o.Prioridade,slaMinutesOf(o),
+    o.ApresentacaoNota,o.AguardandoListagem,o.InicioDescarga,o.FinalDescarga,min(dur(o,'ApresentacaoNota','AguardandoListagem')),min(dur(o,'AguardandoListagem','InicioDescarga')),min(dur(o,'InicioDescarga','FinalDescarga')),min(dur(o,'ApresentacaoNota','FinalDescarga')),
+    isDone(o)?(finishedOnTime(o)?'Dentro do SLA':'Fora do SLA'):(isLate(o)?'Em atraso':'Em andamento'),o.Observacao,o.Divergencia||'',o.DivergenciaDescricao||''])];
+  const sup=[['Fornecedor','Recebimentos','Volumes','Espera p/ descarga média (min)','Descarga média (min)','Ciclo médio (min)','Concluídos fora do SLA'],...supplierStats().map(s=>[s.name,s.count,s.volumes,min(s.wait),min(s.unload),min(s.cycle),s.late])];
+  const blob=makeXlsx([
+    {name:'Recebimentos',rows,widths:[12,18,28,12,22,20,10,18,9,20,11,10,22,22,22,22,14,14,12,12,14,30,12,36],headerRows:[0]},
+    {name:'Fornecedores',rows:sup,widths:[30,13,10,20,18,16,18],headerRows:[0]}
+  ]);
+  const url=URL.createObjectURL(new Blob([blob],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const a=document.createElement('a');a.href=url;a.download=`recebimento_${localDateStr(new Date())}.xlsx`;a.click();URL.revokeObjectURL(url);
+}
+
+/* ---------- render geral / relógio ---------- */
+// Renderiza só a aba visível (Kanban primeiro); as demais são desenhadas ao abrir a aba.
+function renderAll(){
+  const active=document.querySelector('.view.active');
+  const v=active?active.id.replace('view-',''):'kanban';
+  if(v==='kanban') renderKanban();
+  else if(v==='dashboard'){ renderKpis();renderStageMetrics();renderHourChart();renderStatusChart(); }
+  else if(v==='analysis'){ renderDailyChart();renderAnalysis(); }
+  else if(v==='suppliers') renderSuppliers();
+  renderDailySla();
+}
+function tickClock(){document.getElementById('liveClock').textContent=new Date().toLocaleTimeString('pt-BR');}
+setInterval(tickClock,1000);tickClock();
+// O Kanban é redesenhado a cada 1s para atualizar os cronômetros. Se isso acontecer entre o "apertar" e o "soltar"
+// do clique, o navegador perde o clique (parece delay/botão que não responde). Por isso não redesenhamos durante o toque.
+let pointerActive=false;
+document.addEventListener('pointerdown',()=>{pointerActive=true;},true);
+['pointerup','pointercancel','dragend','drop'].forEach(ev=>document.addEventListener(ev,()=>{setTimeout(()=>{pointerActive=false;},60);},true));
+setInterval(()=>{ if(!draggedId && !pointerActive && document.getElementById('view-kanban').classList.contains('active')) renderKanban(); },1000);
+window.addEventListener('click',e=>{
+  if(!e.target.classList.contains('modal-backdrop')) return;
+  const protectedModals=['receiptModal','divergenceModal','dailySlaModal','adminResetPasswordModal','adminCreateUserModal','adminEditUserModal','adminEditLojaModal'];
+  if(protectedModals.includes(e.target.id)) return;
+  e.target.classList.remove('open');
+});
+
+
+function showAuthCard(id){
+  ['authCardLogin','authCardRegister','authCard2FA','authCardForgot','authCardReset','authCardStoreSelect'].forEach(cid=>{
+    document.getElementById(cid).style.display = cid===id ? 'block' : 'none';
+  });
+  ['loginError','registerError','registerSuccess','twofaError','forgotError','forgotSuccess','resetError'].forEach(eid=>{
+    const el=document.getElementById(eid); if(el){ el.classList.remove('show'); el.textContent=''; }
+  });
+}
+function showAuthMsg(elId, msg, isError){
+  const el=document.getElementById(elId);
+  el.textContent=msg; el.classList.add('show');
+}
+
+async function doLogin(){
+  const usuario=document.getElementById('loginUsuario').value.trim();
+  const senha=document.getElementById('loginSenha').value;
+  if(!usuario||!senha){ showAuthMsg('loginError','Preencha usuário e senha.'); return; }
+  const res = await api('login', {usuario, senha});
+  if(res.ok){
+    applySession(res.token, res.user);
+  } else if(res.reason==='needs2fa'){
+    pendingLoginUsuario = usuario;
+    showAuthCard('authCard2FA');
+  } else {
+    showAuthMsg('loginError', res.error || 'Não foi possível entrar.');
+  }
+}
+
+async function doVerify2FA(){
+  const codigo=document.getElementById('twofaCode').value.trim();
+  if(!codigo){ showAuthMsg('twofaError','Informe o código recebido por e-mail.'); return; }
+  const res = await api('verifyTwoFactor', {usuario: pendingLoginUsuario, codigo});
+  if(res.ok){
+    applySession(res.token, res.user);
+  } else {
+    showAuthMsg('twofaError', res.error || 'Código inválido.');
+  }
+}
+
+async function doRegister(){
+  const nome=document.getElementById('regNome').value.trim();
+  const telefone=document.getElementById('regTelefone').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const usuario=document.getElementById('regUsuario').value.trim();
+  const senha=document.getElementById('regSenha').value;
+  const senhaConfirm=document.getElementById('regSenhaConfirm').value;
+  if(!nome||!telefone||!email||!usuario||!senha){ showAuthMsg('registerError','Preencha todos os campos.'); return; }
+  if(senha!==senhaConfirm){ showAuthMsg('registerError','As senhas não coincidem.'); return; }
+  if(senha.length<6){ showAuthMsg('registerError','A senha precisa ter pelo menos 6 caracteres.'); return; }
+  const res = await api('registerUser', {nome, telefone, email, usuario, senha});
+  if(res.ok){
+    showAuthMsg('registerSuccess', res.message || 'Cadastro enviado. Aguarde a autorização do administrador.');
+    ['regNome','regTelefone','regEmail','regUsuario','regSenha','regSenhaConfirm'].forEach(id=>document.getElementById(id).value='');
+  } else {
+    showAuthMsg('registerError', res.error || 'Não foi possível concluir o cadastro.');
+  }
+}
+
+async function doForgotPassword(){
+  const usuario=document.getElementById('forgotUsuario').value.trim();
+  if(!usuario){ showAuthMsg('forgotError','Informe seu usuário.'); return; }
+  const baseUrl = window.location.origin + window.location.pathname;
+  const res = await api('requestPasswordReset', {usuario, baseUrl});
+  showAuthMsg('forgotSuccess', res.message || 'Se o usuário existir, um e-mail foi enviado.');
+}
+
+async function doResetPassword(){
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('reset');
+  const senha=document.getElementById('resetSenha').value;
+  const senhaConfirm=document.getElementById('resetSenhaConfirm').value;
+  if(!senha||senha.length<6){ showAuthMsg('resetError','A senha precisa ter pelo menos 6 caracteres.'); return; }
+  if(senha!==senhaConfirm){ showAuthMsg('resetError','As senhas não coincidem.'); return; }
+  const res = await api('resetPassword', {token, novaSenha: senha});
+  if(res.ok){
+    alert('Senha redefinida com sucesso! Faça login com sua nova senha.');
+    window.history.replaceState({}, '', window.location.pathname);
+    showAuthCard('authCardLogin');
+  } else {
+    showAuthMsg('resetError', res.error || 'Não foi possível redefinir a senha.');
+  }
+}
+
+function applySession(token, user){
+  currentSession = { token, id:user.id, nome:user.nome, usuario:user.usuario, perfil:user.perfil, lojasAutorizadas:user.lojasAutorizadas||[], loja:null };
+  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentSession));
+  proceedAfterLogin();
+}
+
+async function proceedAfterLogin(){
+  const res = await api('listLojas', {});
+  let lojas = (res.ok && res.lojas) ? res.lojas : [];
+  if(!res.ok){
+    lojas = currentSession.lojasAutorizadas.map(id=>({ID:id, Nome:id, Status:'Ativa'}));
+  }
+  allLojasCache = lojas;
+
+  const autorizadas = currentSession.perfil==='Master'
+    ? lojas.map(l=>l.ID)
+    : currentSession.lojasAutorizadas;
+
+  const minhasLojas = lojas.filter(l=>autorizadas.includes(l.ID) && l.Status!=='Inativa');
+
+  if(minhasLojas.length<=1){
+    currentSession.loja = minhasLojas[0] ? minhasLojas[0].ID : (currentSession.lojasAutorizadas[0]||null);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentSession));
+    enterApp();
+    loadAll();
+  } else {
+    showStoreSelection(minhasLojas);
+  }
+}
+
+function showStoreSelection(lojas){
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('mainApp').style.display='none';
+  showAuthCard('authCardStoreSelect');
+  document.getElementById('storeSelectList').innerHTML = lojas.map(l=>
+    `<button class="store-select-btn" onclick="chooseStore('${esc(l.ID)}')" title="Clique para acessar esta loja">
+       <span class="store-select-name">🏬 ${esc(l.Nome)}</span>
+       <span class="store-select-cta">Selecionar →</span>
+     </button>`
+  ).join('');
+}
+
+function chooseStore(lojaId){
+  viewAllStores = false;
+  const cb=document.getElementById('viewAllStores'); if(cb) cb.checked=false;
+  currentSession.loja = lojaId;
+  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentSession));
+  enterApp();
+  renderAll();
+  loadAll();
+}
+
+function openStoreSwitcher(){
+  const lojas = lojasDoUsuario();
+  if(lojas.length<=1){ showToast('Você só tem acesso a uma loja.'); return; }
+  showStoreSelection(lojas);
+}
+
+function handleSessionExpired(){
+  currentSession = null;
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  showAuthCard('authCardLogin');
+  showAuthMsg('loginError','Sua sessão expirou. Faça login novamente.');
+}
+
+async function doLogout(){
+  if(!confirm('Deseja realmente sair?')) return;
+  await api('logout', {});
+  try{ localStorage.removeItem(snapshotKey()); }catch(e){}
+  currentSession = null;
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+  window.location.reload();
+}
+
+function refreshUserBadge(){
+  if(!currentSession) return;
+  const lojaNome = (allLojasCache.find(l=>l.ID===currentSession.loja)||{}).Nome || currentSession.loja || '';
+  document.getElementById('userBadge').textContent = `${currentSession.nome} (${isMaster()?'Master':'Colaborador'})${lojaNome?' — '+lojaNome:''}`;
+}
+
+function enterApp(){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  refreshUserBadge();
+  document.getElementById('adminPanelBtn').style.display = isMaster() ? 'inline-flex' : 'none';
+  document.getElementById('storeSwitchBtn').style.display = lojasDoUsuario().length>1 ? 'inline-flex' : 'none';
+  document.getElementById('viewAllStoresLabel').style.display = (isMaster() && lojasDoUsuario().length>1) ? 'flex' : 'none';
+  if(!_appStarted){
+    _appStarted = true;
+    paintFromLocalSnapshot_();
+    loadAll();
+    setInterval(loadAll, 10000);
+  }
+}
+
+function switchAdminTab(tab, el){
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('adminTabUsers').style.display = tab==='users' ? 'block' : 'none';
+  document.getElementById('adminTabLojas').style.display = tab==='lojas' ? 'block' : 'none';
+  document.getElementById('adminTabLogs').style.display = tab==='logs' ? 'block' : 'none';
+}
+
+async function openAdminPanel(){
+  if(!currentSession || currentSession.perfil!=='Master'){
+    showToast('Usuário não tem permissão.');
+    return;
+  }
+  openModal('adminPanelModal');
+  await refreshAdminLojas();
+  await refreshAdminUsers();
+  await refreshAdminLogs();
+}
+
+async function refreshAdminLojas(){
+  const res = await api('adminListLojas', {});
+  if(!res.ok) return;
+  allLojasCache = res.lojas;
+  document.getElementById('adminLojasBody').innerHTML = res.lojas.map(l=>`<tr>
+    <td>${esc(l.ID)}</td><td>${esc(l.Nome)}</td><td><span class="status-pill ${l.Status==='Inativa'?'bloqueado':'ativo'}">${esc(l.Status||'Ativa')}</span></td>
+    <td>${l.CriadoEm?new Date(l.CriadoEm).toLocaleDateString('pt-BR'):'—'}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="openEditLoja('${esc(l.ID)}')">Editar</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhuma loja cadastrada</td></tr>';
+}
+function openEditLoja(id){
+  const l = allLojasCache.find(x=>String(x.ID)===String(id));
+  if(!l){ showToast('Loja não encontrada.'); return; }
+  document.getElementById('editLojaNome').value=l.Nome||'';
+  document.getElementById('editLojaStatus').value=l.Status==='Inativa'?'Inativa':'Ativa';
+  document.getElementById('editLojaOrdem').value=l.Ordem||'';
+  document.getElementById('editLojaNome').dataset.editId=id;
+  openModal('adminEditLojaModal');
+}
+async function confirmEditLoja(){
+  const id=document.getElementById('editLojaNome').dataset.editId;
+  const nome=document.getElementById('editLojaNome').value.trim();
+  const status=document.getElementById('editLojaStatus').value;
+  const ordem=document.getElementById('editLojaOrdem').value;
+  if(!nome){ showToast('Informe o nome da loja.'); return; }
+  const res = await api('adminUpdateLoja', {id, nome, status, ordem});
+  if(res.ok){
+    closeModal('adminEditLojaModal');
+    showToast('Loja atualizada.');
+    refreshAdminLojas();
+  } else {
+    showToast(res.error || 'Falha ao atualizar loja.');
+  }
+}
+async function confirmCreateLoja(){
+  const nome = document.getElementById('newLojaNome').value.trim();
+  if(!nome){ showToast('Informe o nome da loja.'); return; }
+  const res = await api('adminCreateLoja', {nome});
+  if(res.ok){
+    document.getElementById('newLojaNome').value='';
+    showToast('Loja criada.');
+    refreshAdminLojas();
+  } else {
+    showToast(res.error || 'Falha ao criar loja.');
+  }
+}
+
+async function refreshAdminUsers(){
+  const res = await api('adminListUsers', {});
+  if(!res.ok){
+    if(res.reason==='forbidden') showToast('Usuário não tem permissão.');
+    return;
+  }
+  const users = res.users.slice().sort((a,b)=>new Date(b.CriadoEm||0)-new Date(a.CriadoEm||0));
+  adminUsersCache = users;
+  document.getElementById('adminUsersBody').innerHTML = users.map(u=>{
+    const statusClass = u.Status==='Ativo'?'ativo':(u.Status==='Pendente'?'pendente':'bloqueado');
+    const uid = esc(u.ID);
+    const perfilExibido = u.Perfil==='Master' ? 'Master' : 'Colaborador';
+    const actions=[];
+    if(u.Status==='Pendente') actions.push(`<button class="btn btn-primary btn-sm" onclick="adminSetStatus('${uid}','Ativo')">Autorizar</button>`);
+    if(u.Status==='Ativo') actions.push(`<button class="btn btn-danger btn-sm" onclick="adminSetStatus('${uid}','Bloqueado')">Bloquear</button>`);
+    if(u.Status==='Bloqueado') actions.push(`<button class="btn btn-primary btn-sm" onclick="adminSetStatus('${uid}','Ativo')">Reativar</button>`);
+    actions.push(`<button class="btn btn-outline btn-sm" onclick="openAdminEditUser('${uid}')">Editar</button>`);
+    actions.push(`<button class="btn btn-outline btn-sm" onclick="openAdminResetPassword('${uid}')">Redefinir senha</button>`);
+    if(u.ID!==currentSession.id){
+      const novoPerfil = perfilExibido==='Master' ? 'Colaborador' : 'Master';
+      actions.push(`<button class="btn btn-outline btn-sm" onclick="adminSetRole('${uid}','${novoPerfil}')">Tornar ${novoPerfil}</button>`);
+      actions.push(`<button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${uid}')">Excluir</button>`);
+    }
+    return `<tr>
+      <td>${esc(u.Nome)}</td><td>${esc(u.Usuario)}</td><td>${esc(u.Telefone||'')}</td><td>${esc(u.Email||'')}</td><td>${perfilExibido}</td>
+      <td>${u.Perfil==='Master'?'Todas':esc((u.LojasAutorizadas||[]).map(lojaNomeById).join(', ')||'—')}</td>
+      <td><span class="status-pill ${statusClass}">${esc(u.Status)}</span></td>
+      <td>${u.CriadoEm?new Date(u.CriadoEm).toLocaleDateString('pt-BR'):'—'}</td>
+      <td>${u.UltimoAcesso?new Date(u.UltimoAcesso).toLocaleString('pt-BR'):'—'}</td>
+      <td style="white-space:normal"><div style="display:flex;gap:5px;flex-wrap:wrap">${actions.join('')}</div></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="empty">Nenhum usuário cadastrado</td></tr>';
+}
+async function adminSetStatus(id, status){
+  const res = await api('adminSetUserStatus', {id, status});
+  if(res.ok){ showToast('Status atualizado.'); refreshAdminUsers(); }
+  else showToast(res.error || 'Falha ao atualizar status.');
+}
+async function adminSetRole(id, perfil){
+  if(!confirm(`Alterar perfil deste usuário para ${perfil}?`)) return;
+  const res = await api('adminSetUserRole', {id, perfil});
+  if(res.ok){ showToast('Perfil atualizado.'); refreshAdminUsers(); }
+  else showToast(res.error || 'Falha ao atualizar perfil.');
+}
+async function adminDeleteUser(id){
+  if(!confirm('Excluir este usuário definitivamente?')) return;
+  const res = await api('adminDeleteUser', {id});
+  if(res.ok){ showToast('Usuário excluído.'); refreshAdminUsers(); }
+  else showToast(res.error || 'Falha ao excluir usuário.');
+}
+let selectedResetPasswordUserId=null;
+let adminUsersCache=[];
+function renderLojaCheckboxes(containerId, selectedIds){
+  const container = document.getElementById(containerId);
+  if(allLojasCache.length===0){
+    container.innerHTML = '<span class="hint" style="margin:0">Nenhuma loja cadastrada ainda — crie uma na aba "Lojas".</span>';
+    return;
+  }
+  container.innerHTML = allLojasCache.map(l=>`
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600">
+      <input type="checkbox" value="${esc(l.ID)}" ${selectedIds.includes(l.ID)?'checked':''} style="width:15px;height:15px">
+      ${esc(l.Nome)}
+    </label>
+  `).join('');
+}
+function readLojaCheckboxes(containerId){
+  return Array.from(document.getElementById(containerId).querySelectorAll('input[type="checkbox"]:checked')).map(cb=>cb.value);
+}
+
+function openAdminEditUser(id){
+  const u = adminUsersCache.find(x=>String(x.ID)===String(id));
+  if(!u){ showToast('Usuário não encontrado na lista atual.'); return; }
+  document.getElementById('editUserNome').value=u.Nome||'';
+  document.getElementById('editUserUsuario').value=u.Usuario||'';
+  document.getElementById('editUserPerfil').value=u.Perfil==='Master'?'Master':'Colaborador';
+  document.getElementById('editUserTelefone').value=u.Telefone||'';
+  document.getElementById('editUserEmail').value=u.Email||'';
+  document.getElementById('editUserUsuario').dataset.editId=id;
+  renderLojaCheckboxes('editUserLojasList', Array.isArray(u.LojasAutorizadas)?u.LojasAutorizadas:[]);
+  openModal('adminEditUserModal');
+}
+async function confirmAdminEditUser(){
+  const id=document.getElementById('editUserUsuario').dataset.editId;
+  const nome=document.getElementById('editUserNome').value.trim();
+  const usuario=document.getElementById('editUserUsuario').value.trim();
+  const telefone=document.getElementById('editUserTelefone').value.trim();
+  const email=document.getElementById('editUserEmail').value.trim();
+  const perfil=document.getElementById('editUserPerfil').value;
+  const lojas=readLojaCheckboxes('editUserLojasList');
+  if(!nome||!usuario){ showToast('Preencha nome e usuário.'); return; }
+  const res = await api('adminUpdateUser', {id, nome, usuario, telefone, email, perfil, lojas});
+  if(res.ok){
+    closeModal('adminEditUserModal');
+    showToast('Usuário atualizado.');
+    refreshAdminUsers();
+  } else {
+    showToast(res.error || 'Falha ao atualizar usuário.');
+  }
+}
+function openAdminResetPassword(id){
+  const usr = adminUsersCache.find(x=>String(x.ID)===String(id));
+  const nome = usr ? usr.Nome : id;
+  selectedResetPasswordUserId=id;
+  document.getElementById('adminResetPasswordUserLabel').textContent = `Definindo uma nova senha para: ${nome}`;
+  document.getElementById('adminResetPasswordValue').value='';
+  document.getElementById('adminResetPasswordConfirm').value='';
+  openModal('adminResetPasswordModal');
+}
+async function confirmAdminResetPassword(){
+  const senha=document.getElementById('adminResetPasswordValue').value;
+  const confirmSenha=document.getElementById('adminResetPasswordConfirm').value;
+  if(!senha || senha.length<6){ showToast('A senha precisa ter pelo menos 6 caracteres.'); return; }
+  if(senha!==confirmSenha){ showToast('As senhas não coincidem.'); return; }
+  const res = await api('adminResetPassword', {id: selectedResetPasswordUserId, novaSenha: senha});
+  if(res.ok){
+    closeModal('adminResetPasswordModal');
+    showToast('Senha redefinida com sucesso.');
+  } else {
+    showToast(res.error || 'Falha ao redefinir a senha.');
+  }
+}
+function openAdminCreateUser(){
+  ['newUserNome','newUserUsuario','newUserTelefone','newUserEmail','newUserSenha','newUserSenhaConfirm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newUserPerfil').value='Colaborador';
+  document.getElementById('newUserAtivarImediatamente').checked=true;
+  renderLojaCheckboxes('newUserLojasList', []);
+  openModal('adminCreateUserModal');
+}
+async function confirmAdminCreateUser(){
+  const nome=document.getElementById('newUserNome').value.trim();
+  const usuario=document.getElementById('newUserUsuario').value.trim();
+  const telefone=document.getElementById('newUserTelefone').value.trim();
+  const email=document.getElementById('newUserEmail').value.trim();
+  const perfil=document.getElementById('newUserPerfil').value;
+  const senha=document.getElementById('newUserSenha').value;
+  const senhaConfirm=document.getElementById('newUserSenhaConfirm').value;
+  const ativarImediatamente=document.getElementById('newUserAtivarImediatamente').checked;
+  const lojas=readLojaCheckboxes('newUserLojasList');
+  if(!nome||!usuario||!senha){ showToast('Preencha nome, usuário e senha.'); return; }
+  if(senha.length<6){ showToast('A senha precisa ter pelo menos 6 caracteres.'); return; }
+  if(senha!==senhaConfirm){ showToast('As senhas não coincidem.'); return; }
+  if(perfil!=='Master' && lojas.length===0){ showToast('Selecione pelo menos uma loja para este usuário.'); return; }
+  const res = await api('adminCreateUser', {nome, usuario, telefone, email, perfil, senha, ativarImediatamente, lojas});
+  if(res.ok){
+    closeModal('adminCreateUserModal');
+    showToast(`Usuário "${usuario}" criado como ${perfil}${ativarImediatamente?' e já ativo':' (pendente de autorização)'}.`);
+    refreshAdminUsers();
+  } else {
+    showToast(res.error || 'Falha ao criar usuário.');
+  }
+}
+async function refreshAdminLogs(){
+  const res = await api('adminListAccessLogs', {});
+  if(!res.ok) return;
+  document.getElementById('adminLogsBody').innerHTML = res.logs.map(l=>`<tr>
+    <td>${l.Data?new Date(l.Data).toLocaleString('pt-BR'):'—'}</td>
+    <td>${esc(l.Usuario||'—')}</td>
+    <td>${l.Sucesso==='Sim'?'<span class="sla-ok">Sucesso</span>':'<span class="sla-bad">Falha</span>'}</td>
+    <td>${esc(l.Detalhe||'')}</td>
+  </tr>`).join('') || '<tr><td colspan="4" class="empty">Nenhum acesso registrado</td></tr>';
+}
+
+
+function makeXlsx(sheets){
+  const files={};const now=new Date().toISOString();
+  files['[Content_Types].xml']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  files['_rels/.rels']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  files['docProps/core.xml']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:creator>Painel de Recebimento</dc:creator><cp:lastModifiedBy>Painel de Recebimento</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
+  files['docProps/app.xml']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Painel de Recebimento</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Planilhas</vt:lpstr></vt:variant><vt:variant><vt:i4>${sheets.length}</vt:i4></vt:variant></vt:vector></HeadingPairs><TitlesOfParts><vt:vector size="${sheets.length}" baseType="lpstr">${sheets.map(s=>`<vt:lpstr>${xmlEscape(s.name)}</vt:lpstr>`).join('')}</vt:vector></TitlesOfParts></Properties>`;
+  files['xl/workbook.xml']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView xWindow="0" yWindow="0" windowWidth="24000" windowHeight="12000"/></bookViews><sheets>${sheets.map((s,i)=>`<sheet name="${xmlEscape(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets><calcPr calcId="191029"/></workbook>`;
+  files['xl/_rels/workbook.xml.rels']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  files['xl/styles.xml']=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts><fonts count="3"><font><sz val="10"/><name val="Calibri"/><family val="2"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="10"/><name val="Calibri"/></font><font><b/><color rgb="FF1B2A4A"/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1B2A4A"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFC400"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9DEE7"/></left><right style="thin"><color rgb="FFD9DEE7"/></right><top style="thin"><color rgb="FFD9DEE7"/></top><bottom style="thin"><color rgb="FFD9DEE7"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  sheets.forEach((s,i)=>files[`xl/worksheets/sheet${i+1}.xml`]=sheetXml(s));
+  return zipStore(files);
+}
+function sheetXml(sheet){
+  const rows=sheet.rows||[],headerRows=new Set(sheet.headerRows||[]),cols=(sheet.widths||[]).map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+  const body=rows.map((row,r)=>`<row r="${r+1}"${headerRows.has(r)?' ht="25" customHeight="1"':''}>${row.map((cell,c)=>cellXml(cell,r,c,headerRows.has(r))).join('')}</row>`).join('');
+  const maxCols=Math.max(1,...rows.map(r=>r.length));const dimension=`A1:${colName(maxCols-1)}${Math.max(1,rows.length)}`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="${dimension}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols>${cols}</cols><sheetData>${body}</sheetData><autoFilter ref="A1:${colName(maxCols-1)}${Math.max(1,rows.length)}"/><pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.2" footer="0.2"/></worksheet>`;
+}
+function cellXml(cell,r,c,isHeader){
+  const ref=`${colName(c)}${r+1}`;let value=cell,style=isHeader?1:0,type='s';
+  if(value===null||value===undefined||value==='')return `<c r="${ref}" s="${style}"/>`;
+  if(typeof value==='number')return `<c r="${ref}" s="${style}"><v>${Number(value)}</v></c>`;
+  return `<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(String(value))}</t></is></c>`;
+}
+function colName(n){let s='';for(n++;n>0;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;}
+function xmlEscape(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+function zipStore(files){
+  const enc=new TextEncoder(),entries=[],chunks=[];let offset=0;const dt=dosDateTime(new Date());
+  Object.entries(files).forEach(([name,content])=>{const n=enc.encode(name),d=typeof content==='string'?enc.encode(content):content,crc=crc32(d);const local=new Uint8Array(30+n.length+d.length),v=new DataView(local.buffer);let p=0;v.setUint32(p,0x04034b50,true);p+=4;v.setUint16(p,20,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,dt.time,true);p+=2;v.setUint16(p,dt.date,true);p+=2;v.setUint32(p,crc,true);p+=4;v.setUint32(p,d.length,true);p+=4;v.setUint32(p,d.length,true);p+=4;v.setUint16(p,n.length,true);p+=2;v.setUint16(p,0,true);p+=2;local.set(n,p);local.set(d,p+n.length);chunks.push(local);entries.push({n,d,crc,offset});offset+=local.length});
+  const centralStart=offset;entries.forEach(e=>{const c=new Uint8Array(46+e.n.length),v=new DataView(c.buffer);let p=0;v.setUint32(p,0x02014b50,true);p+=4;v.setUint16(p,20,true);p+=2;v.setUint16(p,20,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,dt.time,true);p+=2;v.setUint16(p,dt.date,true);p+=2;v.setUint32(p,e.crc,true);p+=4;v.setUint32(p,e.d.length,true);p+=4;v.setUint32(p,e.d.length,true);p+=4;v.setUint16(p,e.n.length,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint32(p,0,true);p+=4;v.setUint32(p,e.offset,true);p+=4;c.set(e.n,p);chunks.push(c);offset+=c.length});
+  const centralSize=offset-centralStart,end=new Uint8Array(22),v=new DataView(end.buffer);let p=0;v.setUint32(p,0x06054b50,true);p+=4;v.setUint16(p,0,true);p+=2;v.setUint16(p,0,true);p+=2;v.setUint16(p,entries.length,true);p+=2;v.setUint16(p,entries.length,true);p+=2;v.setUint32(p,centralSize,true);p+=4;v.setUint32(p,centralStart,true);p+=4;v.setUint16(p,0,true);chunks.push(end);const total=chunks.reduce((a,b)=>a+b.length,0),out=new Uint8Array(total);let pos=0;chunks.forEach(ch=>{out.set(ch,pos);pos+=ch.length});return out;
+}
+function dosDateTime(d){let year=Math.max(1980,d.getFullYear());return{time:(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),date:((year-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate()};}
+const CRC_TABLE=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t;})();
+function crc32(bytes){let c=0xffffffff;for(let i=0;i<bytes.length;i++)c=CRC_TABLE[(c^bytes[i])&255]^(c>>>8);return(c^0xffffffff)>>>0;}
+
+(function initAuth(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('reset')){
+    document.getElementById('authScreen').style.display='flex';
+    showAuthCard('authCardReset');
+    return;
+  }
+  const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+  if(saved){
+    try{
+      currentSession = JSON.parse(saved);
+      if(currentSession.loja){
+        enterApp();
+        api('listLojas', {}).then(res=>{ if(res.ok){ allLojasCache = res.lojas; enterApp(); } });
+      } else {
+        proceedAfterLogin();
+      }
+      return;
+    }catch(e){ localStorage.removeItem(SESSION_STORAGE_KEY); }
+  }
+  document.getElementById('authScreen').style.display='flex';
+  showAuthCard('authCardLogin');
+})();
+
+</script>
+</body>
+</html>
