@@ -445,7 +445,7 @@ button{cursor:pointer}
   <div class="modal modal-wide">
     <div class="modal-head"><h3 id="receiptModalTitle">Novo recebimento</h3><button type="button" class="close" onclick="closeModal('receiptModal')">×</button></div>
     <div class="modal-body">
-      <div class="note" id="receiptModalNote">O horário de <b>apresentação da nota</b> é registrado automaticamente ao salvar. Depois, avance o card pelas etapas do Kanban.</div>
+      <div class="note" id="receiptModalNote">O card entra no Kanban na etapa <b>Pré agendamento</b>. O horário de <b>apresentação da nota</b> só é registrado quando você avançar o card para "Check in motorista".</div>
       <div class="form-grid">
         <div class="field span-2" id="receiptLojaField" style="display:none"><label>Loja *</label><select id="rcLoja"></select></div>
         <div class="field"><label>Fornecedor *</label><select id="rcFornecedor" onchange="onFornecedorChange()"></select></div>
@@ -727,6 +727,9 @@ function agendamentoTs(o){
   if(!o||!o.DataAgendamento) return null;
   return ts(o.DataAgendamento+'T'+(o.HoraAgendamento||'00:00')+':00');
 }
+// "Pré agendamento" não é um carimbo ISO de etapa (é data+hora, editado pelo botão "Agendar/Reagendar"),
+// então fica de fora do editor de horários e da validação sequencial das demais etapas.
+function timeEditableStages(){ return stages.filter((st,i)=>i!==STAGE_PREAGENDAMENTO); }
 
 let receipts=[], dailySlas=[], allLojasCache=[], fornecedoresCache=[];
 let currentSession=null, viewAllStores=false, adminFornecedoresCache=[];
@@ -1503,7 +1506,9 @@ function openReceiptModal(id){
   document.getElementById('receiptModalTitle').textContent=o?`Detalhes — ${o.ID}`:'Novo recebimento';
   document.getElementById('receiptModalNote').style.display=o?'none':'block';
   if(o){
-    document.getElementById('receiptTimesGrid').innerHTML=stages.map(st=>`<div class="field"><label>${st.title}</label><input type="datetime-local" id="dt-${st.key}" value="${toLocalInput(o[st.key])}"></div>`).join('');
+    // "Pré agendamento" não entra aqui: é data+hora (DataAgendamento/HoraAgendamento), editado pelo botão
+    // "🗓 Agendar/Reagendar" no card, não um carimbo de horário de etapa como os demais.
+    document.getElementById('receiptTimesGrid').innerHTML=timeEditableStages().map(st=>`<div class="field"><label>${st.title}</label><input type="datetime-local" id="dt-${st.key}" value="${toLocalInput(o[st.key])}"></div>`).join('');
     document.getElementById('receiptDeleteBtn').onclick=()=>{closeModal('receiptModal');quickDelete(o.ID);};
   }
   openModal('receiptModal');
@@ -1546,18 +1551,19 @@ async function saveReceipt(){
   let payload;
   if(existing){
     payload=Object.assign({},existing,data,{SlaMinutos:slaRaw?Number(slaRaw):''});
-    const times=stages.map(st=>{const x=document.getElementById('dt-'+st.key).value;return x?new Date(x).toISOString():'';});
+    const tStages=timeEditableStages();
+    const times=tStages.map(st=>{const x=document.getElementById('dt-'+st.key).value;return x?new Date(x).toISOString():'';});
     if(!times[0]){ showToast('A apresentação da nota é obrigatória.'); return; }
     let last=0;
     for(let i=0;i<times.length;i++){
       if(!times[i]) continue;
       const t=new Date(times[i]).getTime();
-      if(t<last){ showToast(`O horário de "${stages[i].title}" está anterior à etapa anterior.`); return; }
+      if(t<last){ showToast(`O horário de "${tStages[i].title}" está anterior à etapa anterior.`); return; }
       last=t;
     }
-    stages.forEach((st,i)=>payload[st.key]=times[i]);
+    tStages.forEach((st,i)=>payload[st.key]=times[i]);
   }else{
-    payload=Object.assign({},data,{ApresentacaoNota:new Date().toISOString(),AguardandoListagem:'',InicioDescarga:'',FinalDescarga:''});
+    payload=Object.assign({},data,{ApresentacaoNota:'',AguardandoListagem:'',InicioDescarga:'',FinalDescarga:''});
   }
   closeModal('receiptModal');
   document.getElementById('syncStatus').textContent='Salvando...';
