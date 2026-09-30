@@ -53,7 +53,7 @@ button{cursor:pointer}
 .grid-2{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-bottom:18px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
 .panel h2{font-size:16px;margin:0 0 4px}.panel .hint{color:var(--muted);font-size:12px;margin:0 0 16px}
-.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .stage-metric{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:14px}
 .stage-metric .name{font-size:11px;color:var(--muted);min-height:30px}.stage-metric .time{font-size:17px;font-weight:900;margin-top:8px}
 .chart-bars{display:flex;align-items:end;gap:8px;height:210px;border-bottom:1px solid var(--line);padding:8px 4px 0;overflow-x:auto}
@@ -65,7 +65,18 @@ button{cursor:pointer}
 .daily-bar.total{background:#c7ccd4}
 .status-list{display:flex;flex-direction:column;gap:12px}.status-row{display:grid;grid-template-columns:145px 1fr 42px;align-items:center;gap:10px;font-size:12px}
 .status-track{height:10px;background:#eef1f5;border-radius:999px;overflow:hidden}.status-fill{height:100%;border-radius:999px}.status-count{text-align:right;font-weight:800}
-.kanban-wrap{overflow:visible;padding-bottom:8px}.kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head h2{font-size:14px;text-transform:capitalize}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{font-size:10px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:4px}
+.cal-day{position:relative;aspect-ratio:1;border:1px solid #e6e6e2;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;cursor:pointer;background:#fff;gap:2px}
+.cal-day:hover{border-color:#FFC400}
+.cal-day.other-month{opacity:.32}
+.cal-day.today{border-color:#1B2A4A;font-weight:800}
+.cal-day.selected{background:#FFC400;border-color:#E6A100;font-weight:800}
+.cal-day .cal-badge{font-size:9px;background:#1B2A4A;color:#fff;border-radius:999px;min-width:15px;height:15px;line-height:15px;padding:0 3px}
+.cal-day.selected .cal-badge{background:#1B2A4A}
+.kanban-wrap{overflow:visible;padding-bottom:8px}.kanban{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;width:100%}
 .kanban-col{background:#edf1f5;border:1px solid #dfe4eb;border-radius:12px;min-height:300px;padding:8px}
 .kanban-col.drag-over{outline:3px solid rgba(255,196,0,.55);background:#fff8dc}
 .col-head{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:2px 2px 8px}
@@ -170,6 +181,7 @@ button{cursor:pointer}
 .status-pill.ativo{background:#e9f7ef;color:var(--green)}
 .status-pill.bloqueado{background:#fff0f0;color:var(--red)}
 @media(max-width:1250px){.kpis{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}.stage-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1450px){.kanban{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:1100px){.kanban{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.form-grid{grid-template-columns:1fr}.span-2{grid-column:span 1}}
 @media(max-width:760px){
@@ -310,6 +322,7 @@ button{cursor:pointer}
       <div class="sync" id="userBadge" style="font-weight:800"></div>
       <button class="btn btn-outline btn-sm" id="storeSwitchBtn" style="display:none" onclick="openStoreSwitcher()">🏬 Trocar loja</button>
       <button class="btn btn-primary" onclick="openReceiptModal()">＋ Novo recebimento</button>
+      <button class="btn btn-outline" onclick="openNewScheduleModal()">🗓 Agendar entrega</button>
       <button class="btn btn-dark" id="adminPanelBtn" style="display:none" onclick="openAdminPanel()">🛡 Painel administrativo</button>
       <button class="btn btn-outline btn-sm" onclick="doLogout()">Sair</button>
     </div>
@@ -339,6 +352,7 @@ button{cursor:pointer}
       <button class="tab" data-view="dashboard" onclick="switchView('dashboard',this)">Dashboard</button>
       <button class="tab" data-view="analysis" onclick="switchView('analysis',this)">Cronoanálise</button>
       <button class="tab" data-view="suppliers" onclick="switchView('suppliers',this)">Fornecedores</button>
+      <button class="tab" data-view="agendamentos" onclick="switchView('agendamentos',this)">Agendamentos</button>
     </nav>
 
     <section class="view" id="view-dashboard">
@@ -350,6 +364,18 @@ button{cursor:pointer}
       <div class="grid-2">
         <div class="panel"><h2>Notas apresentadas por hora</h2><p class="hint">Distribuição conforme o horário de apresentação da nota.</p><div class="chart-bars" id="hourChart"></div></div>
         <div class="panel"><h2>Distribuição por etapa</h2><p class="hint">Posição atual dos recebimentos no fluxo.</p><div class="status-list" id="statusChart"></div></div>
+      </div>
+      <div class="panel" style="margin-top:18px">
+        <h2>Problemas na listagem</h2>
+        <p class="hint">Registrados ao mover o card de "Check in motorista" para "Listagem liberada". Baseado no período filtrado.</p>
+        <div class="stage-grid" id="listagemKpis"></div>
+        <div class="grid-2" style="margin-top:14px">
+          <div><h3 style="font-size:13px;color:var(--muted);margin:0 0 8px">Por motivo</h3><div class="status-list" id="listagemMotivoChart"></div></div>
+          <div><h3 style="font-size:13px;color:var(--muted);margin:0 0 8px">Por fornecedor</h3><div class="status-list" id="listagemFornecedorChart"></div></div>
+        </div>
+        <div class="table-wrap" style="margin-top:14px"><table class="data-table"><thead><tr>
+          <th>Recebimento</th><th class="col-loja" style="display:none">Loja</th><th>Fornecedor</th><th>NF</th><th>Data</th><th>Motivo / descrição</th>
+        </tr></thead><tbody id="listagemBody"></tbody></table></div>
       </div>
     </section>
 
@@ -373,8 +399,8 @@ button{cursor:pointer}
         <p class="hint"><b>Padrão de leitura:</b> durações em horas, minutos e segundos — ex.: <b>01h 11min 00s</b>. O <b>ritmo de descarga</b> é volumes ÷ tempo entre início e final da descarga.</p>
         <div class="table-wrap"><table class="data-table"><thead><tr>
           <th>Recebimento</th><th class="col-loja" style="display:none">Loja</th><th>Fornecedor</th><th>NF</th><th>Departamento</th><th>Recebedor</th><th>Volumes</th>
-          <th>Apresentação da nota</th><th>Aguardando listagem</th><th>Início descarga</th><th>Final descarga</th>
-          <th>Apres. → listagem</th><th>Espera p/ descarga</th><th>Descarga</th><th>Ritmo</th><th>Ciclo total</th><th class="sla-col">SLA aplicável</th><th class="sla-col">Resultado</th>
+          <th>Apresentação da nota</th><th>Aguardando listagem</th><th>Agendamento</th><th>Início descarga</th><th>Final descarga</th>
+          <th>Apres. → listagem</th><th>Listagem → agend.</th><th>Agend. → descarga</th><th>Descarga</th><th>Ritmo</th><th>Ciclo total</th><th class="sla-col">SLA aplicável</th><th class="sla-col">Resultado</th>
         </tr></thead><tbody id="analysisBody"></tbody></table></div>
       </div>
     </section>
@@ -388,6 +414,28 @@ button{cursor:pointer}
         <div class="table-wrap"><table class="data-table" style="min-width:900px"><thead><tr>
           <th>#</th><th>Fornecedor</th><th>Recebimentos</th><th>Volumes</th><th>Espera p/ descarga (média)</th><th>Descarga (média)</th><th>Ritmo</th><th>Ciclo total (médio)</th><th class="sla-col">Fora do SLA</th>
         </tr></thead><tbody id="suppliersBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-agendamentos">
+      <div class="grid-2" style="align-items:start">
+        <div class="panel">
+          <div class="cal-head">
+            <button type="button" class="btn btn-outline btn-sm" onclick="calShiftMonth(-1)">‹</button>
+            <h2 id="calMonthLabel" style="margin:0"></h2>
+            <button type="button" class="btn btn-outline btn-sm" onclick="calShiftMonth(1)">›</button>
+          </div>
+          <div class="cal-grid cal-dow"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="field" style="margin-top:14px"><label>Ou escolha a data diretamente</label><input type="date" id="agendaDateInput" onchange="onAgendaDateInputChange()"></div>
+        </div>
+        <div class="panel">
+          <h2 id="agendaListTitle">Agendamentos</h2>
+          <p class="hint" id="agendaListHint">Selecione uma data no calendário para ver os agendamentos, em ordem cronológica.</p>
+          <div class="table-wrap"><table class="data-table"><thead><tr>
+            <th>Hora</th><th class="col-loja" style="display:none">Loja</th><th>Fornecedor</th><th>NF</th><th>Status</th><th>Observação</th><th>Ações</th>
+          </tr></thead><tbody id="agendaBody"></tbody></table></div>
+        </div>
       </div>
     </section>
 
@@ -444,6 +492,65 @@ button{cursor:pointer}
       <button type="button" class="btn btn-outline" onclick="cancelDivergence()">Cancelar</button>
       <button type="button" class="btn btn-danger" onclick="confirmDivergence(true)">Sim, houve divergência</button>
       <button type="button" class="btn btn-primary" onclick="confirmDivergence(false)">Não, sem divergência</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="listagemModal">
+  <div class="modal" style="width:min(460px,100%)">
+    <div class="modal-head"><h3>Houve problema na listagem?</h3><button type="button" class="close" onclick="cancelListagem()">×</button></div>
+    <div class="modal-body">
+      <p class="hint" id="listagemLabel" style="margin-top:0"></p>
+      <div class="field" style="margin-bottom:12px">
+        <label>Motivo do problema (obrigatório se houve problema)</label>
+        <select id="listagemMotivo" onchange="onListagemMotivoChange()">
+          <option value="">Selecione...</option>
+          <option value="Sistema fora do ar">Sistema fora do ar</option>
+          <option value="Pedido não cadastrado">Pedido não cadastrado</option>
+          <option value="Divergência de itens/quantidade">Divergência de itens/quantidade</option>
+          <option value="Nota fiscal com erro">Nota fiscal com erro</option>
+          <option value="Fornecedor sem agendamento">Fornecedor sem agendamento</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="field" id="listagemMotivoOutroField" style="display:none;margin-bottom:12px">
+        <label>Descreva o motivo *</label>
+        <input id="listagemMotivoOutro" placeholder="Descreva o problema na listagem" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Detalhes adicionais (opcional)</label>
+        <textarea id="listagemText" rows="3" placeholder="Ex.: aguardou 40min, precisou ligar para o comprador..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-outline" onclick="cancelListagem()">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="confirmListagem(true)">Sim, houve problema</button>
+      <button type="button" class="btn btn-primary" onclick="confirmListagem(false)">Não, sem problema</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="scheduleModal">
+  <div class="modal" style="width:min(420px,100%)">
+    <div class="modal-head"><h3>Agendar entrega</h3><button type="button" class="close" onclick="closeModal('scheduleModal')">×</button></div>
+    <div class="modal-body">
+      <p class="hint" id="scheduleLabel" style="margin-top:0"></p>
+      <div class="form-grid" id="scNewFields" style="display:none">
+        <div class="field span-2" id="scLojaField" style="display:none"><label>Loja *</label><select id="scLoja"></select></div>
+        <div class="field"><label>Fornecedor *</label><select id="scFornecedor" onchange="onScFornecedorChange()"></select></div>
+        <div class="field" id="scNovoFornecedorField" style="display:none"><label>Novo fornecedor *</label><input id="scNovoFornecedor" placeholder="Nome do fornecedor" autocomplete="off"></div>
+        <div class="field"><label>Nº da nota fiscal (se já souber)</label><input id="scNF" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <div class="form-grid" style="margin-top:0">
+        <div class="field"><label>Data *</label><input type="date" id="scDate"></div>
+        <div class="field"><label>Hora *</label><input type="time" id="scTime"></div>
+        <div class="field span-2"><label>Observação (opcional)</label><input id="scNote" placeholder="Ex.: descarregar na doca 2" autocomplete="off"></div>
+      </div>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-outline" onclick="closeModal('scheduleModal')">Cancelar</button>
+      <button type="button" class="btn btn-outline" id="scRemoveBtn" style="display:none" onclick="confirmRemoveSchedule()">Remover agendamento</button>
+      <button type="button" class="btn btn-primary" onclick="confirmSchedule()">Salvar agendamento</button>
     </div>
   </div>
 </div>
@@ -599,12 +706,29 @@ const LISTING_ALERT_MIN = 60;    // alerta visual: card parado em "Aguardando li
 const DEPARTAMENTOS = ['Mercearia','Bebidas','Perecíveis','Frios e laticínios','Hortifruti','Açougue','Padaria','Higiene e limpeza','Bazar','Outros'];
 const TIPOS_CARGA = ['FOB','FLV','Perecíveis','Laticínios','Carnes','Bebidas','Normal'];
 
+// "Agendamento" fica ANTES do check-in: o motorista/fornecedor pode agendar a entrega antes mesmo de
+// chegar na loja (sem check-in, sem listagem ainda). Usa o próprio campo DataAgendamento como marcador
+// de etapa (não precisa de um carimbo de data/hora separado) — evita duplicidade com o agendamento em si.
+// "Pré agendamento" é a etapa inicial (antes do check-in): o motorista/fornecedor agenda a entrega antes
+// de chegar na loja. Usa o próprio campo DataAgendamento como marcador — evita duplicar dado na planilha.
+// Depois disso o fluxo segue normal: check-in, listagem, "Agendamento" (vaga/horário de descarga), descarga.
 const stages=[
+  {key:'DataAgendamento',    title:'Pré agendamento',    color:'#5c6bc0'},
   {key:'ApresentacaoNota',   title:'Check in motorista (Entrega da nota)', color:'#2962b8'},
   {key:'AguardandoListagem', title:'Listagem liberada',  color:'#dc7b14'},
+  {key:'Agendamento',        title:'Agendamento',        color:'#c9930f'},
   {key:'InicioDescarga',     title:'Início da descarga',   color:'#7b4eb2'},
   {key:'FinalDescarga',      title:'Final da descarga',    color:'#17834f'}
 ];
+const STAGE_PREAGENDAMENTO=stages.findIndex(s=>s.key==='DataAgendamento');
+const STAGE_CHECKIN=stages.findIndex(s=>s.key==='ApresentacaoNota');
+const STAGE_LISTAGEM=stages.findIndex(s=>s.key==='AguardandoListagem');
+const STAGE_AGENDAMENTO=stages.findIndex(s=>s.key==='Agendamento');
+const STAGE_INICIO_DESCARGA=stages.findIndex(s=>s.key==='InicioDescarga');
+function agendamentoTs(o){
+  if(!o||!o.DataAgendamento) return null;
+  return ts(o.DataAgendamento+'T'+(o.HoraAgendamento||'00:00')+':00');
+}
 
 let receipts=[], dailySlas=[], allLojasCache=[], fornecedoresCache=[];
 let currentSession=null, viewAllStores=false, adminFornecedoresCache=[];
@@ -808,6 +932,8 @@ function renderKpis(){
     {label:'Volumes descarregados',value:unlVol,sub:`Ritmo: ${fmtRate(unlVol,unlMs)}`,cls:''},
     {label:'Ciclo médio',value:cycleAvg==null?'—':fmtHoursMin(cycleAvg/60000),sub:'Apresentação → final da descarga',cls:''}
   ];
+  const listagemCount=list.filter(o=>o.ProblemaListagem==='Sim').length;
+  kpis.splice(2,0,{label:'Problemas na listagem',value:listagemCount,sub:'No período',cls:listagemCount>0?'warn':'good'});
   if(SLA_VISIVEL){
     kpis.splice(2,0,{label:'Em atraso (SLA)',value:late,sub:'Ainda não finalizados',cls:late>0?'bad':'good'});
     kpis.splice(4,0,{label:'% dentro do SLA',value:pct+'%',sub:`${onTime} de ${done.length} concluídos`,cls:pct>=80?'good':(pct>=50?'warn':'bad')});
@@ -816,7 +942,7 @@ function renderKpis(){
 }
 function renderStageMetrics(){
   const list=filteredReceipts();
-  const pairs=[['ApresentacaoNota','AguardandoListagem','Apresentação → aguardando listagem'],['AguardandoListagem','InicioDescarga','Espera p/ início da descarga'],['InicioDescarga','FinalDescarga','Descarga'],['ApresentacaoNota','FinalDescarga','Ciclo total']];
+  const pairs=[['ApresentacaoNota','AguardandoListagem','Apresentação → aguardando listagem'],['AguardandoListagem','Agendamento','Listagem → agendamento'],['Agendamento','InicioDescarga','Agendamento → início da descarga'],['InicioDescarga','FinalDescarga','Descarga'],['ApresentacaoNota','FinalDescarga','Ciclo total']];
   document.getElementById('stageMetrics').innerHTML=pairs.map(([a,b,label])=>{
     const durs=list.map(o=>dur(o,a,b)).filter(x=>x!=null);
     return `<div class="stage-metric"><div class="name">${label}</div><div class="time">${fmtDuration(avg(durs))}</div><div class="count">${durs.length} recebimento(s)</div></div>`;
@@ -833,6 +959,44 @@ function renderStatusChart(){
   filteredReceipts().forEach(o=>counts[inferStatus(o)]++);
   const max=Math.max(1,...counts);
   document.getElementById('statusChart').innerHTML=stages.map((st,i)=>`<div class="status-row"><div>${st.title}</div><div class="status-track"><div class="status-fill" style="width:${(counts[i]/max)*100}%;background:${st.color}"></div></div><div class="status-count">${counts[i]}</div></div>`).join('');
+}
+function listagemMotivoOf(o){
+  const d=String(o.ProblemaListagemDescricao||'');
+  return d.split(' — ')[0] || 'Não informado';
+}
+function renderListagemReport(){
+  const list=filteredReceipts();
+  const afetados=list.filter(o=>o.ProblemaListagem==='Sim');
+  const total=list.length;
+  const pct=total>0?Math.round(afetados.length/total*100):0;
+  const porMotivo={}, porFornecedor={};
+  afetados.forEach(o=>{
+    const m=listagemMotivoOf(o); porMotivo[m]=(porMotivo[m]||0)+1;
+    const f=o.Fornecedor||'—'; porFornecedor[f]=(porFornecedor[f]||0)+1;
+  });
+  const topFornecedorEntry=Object.entries(porFornecedor).sort((a,b)=>b[1]-a[1])[0];
+  const kpis=[
+    {label:'Recebimentos com problema na listagem',value:afetados.length,sub:`${pct}% do período filtrado`,cls:afetados.length>0?'bad':'good'},
+    {label:'Fornecedor mais recorrente',value:topFornecedorEntry?topFornecedorEntry[0]:'—',sub:topFornecedorEntry?`${topFornecedorEntry[1]} ocorrência(s)`:'Sem ocorrências',cls:''},
+    {label:'Total no período',value:total,sub:'Recebimentos filtrados',cls:''}
+  ];
+  document.getElementById('listagemKpis').innerHTML=kpis.map(k=>`<div class="stage-metric"><div class="name">${esc(k.label)}</div><div class="time" style="font-size:15px">${esc(String(k.value))}</div><div class="count">${esc(k.sub)}</div></div>`).join('');
+  const rankChart=(obj)=>{
+    const entries=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const max=Math.max(1,...entries.map(e=>e[1]));
+    return entries.map(([name,c])=>`<div class="status-row"><div>${esc(name)}</div><div class="status-track"><div class="status-fill" style="width:${(c/max)*100}%;background:#e6a100"></div></div><div class="status-count">${c}</div></div>`).join('')||'<div class="empty">Sem ocorrências</div>';
+  };
+  document.getElementById('listagemMotivoChart').innerHTML=rankChart(porMotivo);
+  document.getElementById('listagemFornecedorChart').innerHTML=rankChart(porFornecedor);
+  const showLoja=isMaster()&&viewAllStores;
+  document.querySelectorAll('#view-dashboard .col-loja').forEach(th=>th.style.display=showLoja?'':'none');
+  document.getElementById('listagemBody').innerHTML=afetados
+    .slice().sort((a,b)=>(ts(b.AguardandoListagem)||0)-(ts(a.AguardandoListagem)||0))
+    .map(o=>`<tr>
+      <td>${esc(o.ID)}</td>${showLoja?`<td>${esc(lojaNomeById(o.LojaID))}</td>`:''}<td>${esc(o.Fornecedor)}</td><td>${esc(o.NumeroNF)}</td>
+      <td>${o.AguardandoListagem?fmtDateTime(o.AguardandoListagem):'—'}</td>
+      <td>${esc(o.ProblemaListagemDescricao||'—')}</td>
+    </tr>`).join('')||`<tr><td colspan="${showLoja?6:5}" class="empty">Nenhum problema de listagem no período</td></tr>`;
 }
 function renderDailySla(){
   const toolbar=document.getElementById('slaToolbar');
@@ -867,14 +1031,14 @@ function renderKanban(){
       const nowRef=done?ts(o.FinalDescarga):now;
       const totalElapsed=start!=null?nowRef-start:null;
       const isLast=i>=stages.length-1;
-      const enteredAt=ts(o[st.key])||start;
+      const enteredAt=(i===STAGE_PREAGENDAMENTO)?null:(ts(o[st.key])||start);
       const stageElapsed=isLast?dur(o,'InicioDescarga','FinalDescarga'):(enteredAt!=null?nowRef-enteredAt:null);
       const slaMin=slaMinutesOf(o);
       const isCustomSla=Number(o.SlaMinutos)>0;
       const due=dueAt(o);
       const vol=volumesOf(o);
       const hasRecebedor=o.Recebedor&&String(o.Recebedor).trim();
-      const listingWait=(i===1&&stageElapsed!=null&&stageElapsed>=LISTING_ALERT_MIN*60000)
+      const listingWait=(i===STAGE_LISTAGEM&&stageElapsed!=null&&stageElapsed>=LISTING_ALERT_MIN*60000)
         ?`<div class="stage-alert-bar">⚠ AGUARDANDO LISTAGEM HÁ MAIS DE ${fmtHoursMin(LISTING_ALERT_MIN)}</div>`:'';
       let blink='';
       if(SLA_VISIVEL&&!done&&totalElapsed!=null){
@@ -888,22 +1052,25 @@ function renderKanban(){
         <div class="order-client">${esc(o.Fornecedor)}</div>
         ${o.TipoCarga?`<div class="order-line" style="font-weight:800"><span class="ic">🏷</span>Tipo de carga: <span style="color:#8a5b00">${esc(o.TipoCarga)}</span></div>`:''}
         ${showLoja?`<div class="order-line"><span class="ic">🏬</span><b>${esc(lojaNomeById(o.LojaID))}</b></div>`:''}
-        <div class="order-line"><span class="ic">🧾</span>NF ${esc(o.NumeroNF)}</div>
+        <div class="order-line"><span class="ic">🧾</span>NF ${o.NumeroNF?esc(o.NumeroNF):'<i>ainda não informada</i>'}</div>
         <div class="order-line"><span class="ic">🚚</span>${esc(o.Transportadora||'—')}${o.Motorista?` · ${esc(o.Motorista)}`:''}${o.Placa?` · ${esc(o.Placa)}`:''}</div>
         ${o.Prioridade==='Urgente'?`<div class="order-urgent">URGENTE</div>`:''}
         <div class="order-line assign" style="cursor:pointer" onclick="openReceiptModal('${id}')" title="Clique para definir o recebedor">${(!hasRecebedor&&i>=2)?'<span class="ic-blink-red"></span>':''}<span class="ic">👤</span><span class="${hasRecebedor?'set':'missing'}">${hasRecebedor?('Recebedor: '+esc(o.Recebedor)):'Recebedor não definido'}</span><span class="ic" style="margin-left:6px">📦</span>${vol} volume(s)</div>
         ${listingWait}
         ${(isLast&&o.Divergencia==='Sim')?`<div class="stage-alert-bar" title="${esc(o.DivergenciaDescricao||'')}">⚠ DIVERGÊNCIA NO RECEBIMENTO${o.DivergenciaDescricao?': '+esc(String(o.DivergenciaDescricao).slice(0,60)):''}</div>`:''}
+        ${o.ProblemaListagem==='Sim'?`<div class="stage-alert-bar" style="background:#fff4e0;color:#8a5b00;border-color:#f3d59b" title="${esc(o.ProblemaListagemDescricao||'')}">⚠ PROBLEMA NA LISTAGEM${o.ProblemaListagemDescricao?': '+esc(String(o.ProblemaListagemDescricao).slice(0,60)):''}</div>`:''}
         <div class="timer-box">
           <div><div class="timer-label">Tempo total</div><div class="timer-value" style="${(SLA_VISIVEL&&late)?'color:var(--red)':''}">${fmtDuration(totalElapsed)}</div></div>
           <div><div class="timer-label">${isLast?'Descarga':'Na etapa'}</div><div class="timer-value">${fmtDuration(stageElapsed)}</div></div>
         </div>
         <div class="order-sub">Apresentada: <b>${fmtTime(o.ApresentacaoNota)}</b></div>
+        ${o.DataAgendamento?`<div class="order-sub">📅 Agendado: <b>${new Date(o.DataAgendamento+'T00:00:00').toLocaleDateString('pt-BR')}${o.HoraAgendamento?' às '+o.HoraAgendamento:''}</b></div>`:''}
         ${SLA_VISIVEL?`<div class="order-sub">Prazo: <b>${due!=null?new Date(due).toLocaleTimeString('pt-BR'):'—'}</b> &nbsp; ${isCustomSla?'SLA do recebimento':'SLA do dia'}${done?` &nbsp; <b style="color:${finishedOnTime(o)?'var(--green)':'var(--red)'}">${finishedOnTime(o)?'no prazo':'fora do prazo'}</b>`:''}</div>`:''}
         <div class="order-actions">
           <button class="btn" onclick="openReceiptModal('${id}')">Detalhes</button>
           ${isLast?`<button class="btn btn-done" disabled>Concluído</button>`:`<button class="btn btn-advance" onclick="advanceStage('${id}')">Avançar</button>`}
           ${i>0?`<button class="btn" style="grid-column:span 2" onclick="backStage('${id}')">↩ Voltar etapa</button>`:''}
+          <button class="btn" style="grid-column:span 2" onclick="openScheduleModal('${id}')">🗓 ${o.DataAgendamento?'Reagendar':'Agendar'}</button>
         </div>
       </div>`;
     }).join('')||'<div class="empty">Sem recebimentos</div>';
@@ -922,18 +1089,51 @@ function dropOn(e,stageIndex){
   setStage(id,stageIndex);
 }
 let pendingDivergenceId=null;
+let pendingListagemId=null;
 function setStage(id,index,opts){
   const o=receipts.find(x=>String(x.ID)===String(id)); if(!o) return;
   const prev=inferStatus(o);
   if(index===prev) return;
-  if(index===stages.length-1 && prev<index && !opts){ askDivergence(o); return; }
-  for(let i=1;i<=index;i++){ if(!o[stages[i].key]) o[stages[i].key]=new Date().toISOString(); }
+  if(index===stages.length-1 && prev<index && !(opts&&opts.type==='divergencia')){ askDivergence(o); return; }
+  if(index===STAGE_LISTAGEM && prev===STAGE_CHECKIN && !(opts&&opts.type==='listagem')){ askListagem(o); return; }
+  for(let i=STAGE_CHECKIN;i<=index;i++){ if(!o[stages[i].key]) o[stages[i].key]=new Date().toISOString(); }
   for(let i=index+1;i<stages.length;i++){ o[stages[i].key]=''; }
-  if(index===stages.length-1 && opts){ o.Divergencia=opts.divergencia?'Sim':'Não'; o.DivergenciaDescricao=opts.divergencia?(opts.descricao||''):''; }
+  if(index===stages.length-1 && opts&&opts.type==='divergencia'){ o.Divergencia=opts.divergencia?'Sim':'Não'; o.DivergenciaDescricao=opts.divergencia?(opts.descricao||''):''; }
   else if(index<stages.length-1){ o.Divergencia=''; o.DivergenciaDescricao=''; }
+  if(index===STAGE_LISTAGEM && opts&&opts.type==='listagem'){ o.ProblemaListagem=opts.listagem?'Sim':'Não'; o.ProblemaListagemDescricao=opts.listagem?(opts.descricao||''):''; }
+  else if(index<STAGE_LISTAGEM){ o.ProblemaListagem=''; o.ProblemaListagemDescricao=''; }
   if(!o.ApresentacaoNota) o.ApresentacaoNota=new Date().toISOString();
-  if(index===2&&!(o.Recebedor&&String(o.Recebedor).trim())) showToast('Descarga iniciada — lembre de definir o recebedor.');
+  if(index===STAGE_INICIO_DESCARGA&&!(o.Recebedor&&String(o.Recebedor).trim())) showToast('Descarga iniciada — lembre de definir o recebedor.');
   persistReceipt(o);
+}
+function askListagem(o){
+  pendingListagemId=o.ID;
+  document.getElementById('listagemLabel').textContent=`${o.ID} — ${o.Fornecedor} (NF ${o.NumeroNF})`;
+  document.getElementById('listagemMotivo').value='';
+  document.getElementById('listagemMotivoOutro').value='';
+  document.getElementById('listagemText').value='';
+  document.getElementById('listagemMotivoOutroField').style.display='none';
+  openModal('listagemModal');
+}
+function onListagemMotivoChange(){
+  document.getElementById('listagemMotivoOutroField').style.display=document.getElementById('listagemMotivo').value==='Outro'?'flex':'none';
+}
+function cancelListagem(){ pendingListagemId=null; closeModal('listagemModal'); }
+function confirmListagem(had){
+  const id=pendingListagemId; if(!id) return;
+  let motivo=document.getElementById('listagemMotivo').value;
+  const motivoOutro=document.getElementById('listagemMotivoOutro').value.trim();
+  const detalhe=document.getElementById('listagemText').value.trim();
+  if(had){
+    if(!motivo){ showToast('Selecione o motivo do problema na listagem.'); return; }
+    if(motivo==='Outro'){
+      if(!motivoOutro){ showToast('Descreva o motivo do problema na listagem.'); return; }
+      motivo=motivoOutro;
+    }
+  }
+  const descricao=had?(motivo+(detalhe?(' — '+detalhe):'')):'';
+  pendingListagemId=null; closeModal('listagemModal');
+  setStage(id,STAGE_LISTAGEM,{type:'listagem',listagem:had,descricao});
 }
 function askDivergence(o){
   pendingDivergenceId=o.ID;
@@ -946,7 +1146,7 @@ function confirmDivergence(had){
   const id=pendingDivergenceId; if(!id) return;
   const descricao=document.getElementById('divergenceText').value.trim();
   pendingDivergenceId=null; closeModal('divergenceModal');
-  setStage(id,stages.length-1,{divergencia:had,descricao});
+  setStage(id,stages.length-1,{type:'divergencia',divergencia:had,descricao});
 }
 function advanceStage(id){const o=receipts.find(x=>String(x.ID)===String(id));if(!o)return;setStage(id,Math.min(stages.length-1,inferStatus(o)+1));}
 function backStage(id){const o=receipts.find(x=>String(x.ID)===String(id));if(!o)return;setStage(id,Math.max(0,inferStatus(o)-1));}
@@ -1010,11 +1210,11 @@ function renderAnalysis(){
     else if(isLate(o)) result='<span class="sla-bad">Em atraso</span>';
     const slaCols=SLA_VISIVEL?`<td>${fmtDuration(slaMinutesOf(o)*60000)}</td><td>${result}</td>`:'';
     return `<tr>
-      <td>${esc(o.ID)}</td>${showLoja?`<td>${esc(lojaNomeById(o.LojaID))}</td>`:''}<td>${esc(o.Fornecedor)}</td><td>${esc(o.NumeroNF)}</td><td>${esc(o.Departamento||'—')}</td><td>${esc(o.Recebedor||'—')}</td><td>${volumesOf(o)}</td>
-      <td>${fmtDateTime(o.ApresentacaoNota)}</td><td>${fmtDateTime(o.AguardandoListagem)}</td><td>${fmtDateTime(o.InicioDescarga)}</td><td>${fmtDateTime(o.FinalDescarga)}</td>
-      <td>${fmtDuration(dur(o,'ApresentacaoNota','AguardandoListagem'))}</td><td>${fmtDuration(dur(o,'AguardandoListagem','InicioDescarga'))}</td><td>${fmtDuration(unl)}</td><td>${fmtRate(volumesOf(o),unl)}</td><td>${fmtDuration(cycle)}</td>
+      <td>${esc(o.ID)}</td>${showLoja?`<td>${esc(lojaNomeById(o.LojaID))}</td>`:''}<td>${esc(o.Fornecedor)}</td><td>${esc(o.NumeroNF||'—')}</td><td>${esc(o.Departamento||'—')}</td><td>${esc(o.Recebedor||'—')}</td><td>${volumesOf(o)}</td>
+      <td>${fmtDateTime(o.ApresentacaoNota)}</td><td>${fmtDateTime(o.AguardandoListagem)}</td><td>${fmtDateTime(o.Agendamento)}</td><td>${fmtDateTime(o.InicioDescarga)}</td><td>${fmtDateTime(o.FinalDescarga)}</td>
+      <td>${fmtDuration(dur(o,'ApresentacaoNota','AguardandoListagem'))}</td><td>${fmtDuration(dur(o,'AguardandoListagem','Agendamento'))}</td><td>${fmtDuration(dur(o,'Agendamento','InicioDescarga'))}</td><td>${fmtDuration(unl)}</td><td>${fmtRate(volumesOf(o),unl)}</td><td>${fmtDuration(cycle)}</td>
       ${slaCols}</tr>`;
-  }).join('')||`<tr><td colspan="${showLoja?(SLA_VISIVEL?18:16):(SLA_VISIVEL?17:15)}" class="empty">Nenhum recebimento no período</td></tr>`;
+  }).join('')||`<tr><td colspan="${showLoja?(SLA_VISIVEL?20:18):(SLA_VISIVEL?19:17)}" class="empty">Nenhum recebimento no período</td></tr>`;
 }
 
 /* ---------- Fornecedores ---------- */
@@ -1046,6 +1246,163 @@ function renderSuppliers(){
   document.getElementById('suppliersBody').innerHTML=rows.map((s,i)=>`<tr>
     <td>${i+1}</td><td><b>${esc(s.name)}</b></td><td>${s.count}</td><td>${s.volumes}</td><td>${fmtDuration(s.wait)}</td><td>${fmtDuration(s.unload)}</td><td>${s.rate}</td><td>${fmtDuration(s.cycle)}</td>
     ${SLA_VISIVEL?`<td>${s.doneCount?`<span class="${s.late>0?'sla-bad':'sla-ok'}">${s.late} de ${s.doneCount}</span>`:'—'}</td>`:''}</tr>`).join('')||`<tr><td colspan="${SLA_VISIVEL?9:8}" class="empty">Nenhum fornecedor no período</td></tr>`;
+}
+
+/* ---------- Agendamentos ---------- */
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelectedDate=localDateStr(new Date());
+let pendingScheduleId=null;
+function agendaScope(){
+  return receipts.filter(o=>o.DataAgendamento&&(isMaster()||inCurrentLoja(o.LojaID)));
+}
+function calShiftMonth(delta){
+  calMonth+=delta;
+  if(calMonth<0){calMonth=11;calYear--;} else if(calMonth>11){calMonth=0;calYear++;}
+  renderCalendar();
+}
+function renderCalendar(){
+  const showLoja=isMaster()&&viewAllStores;
+  document.querySelectorAll('#view-agendamentos .col-loja').forEach(th=>th.style.display=showLoja?'':'none');
+  const counts={};
+  agendaScope().forEach(o=>{ counts[o.DataAgendamento]=(counts[o.DataAgendamento]||0)+1; });
+  const first=new Date(calYear,calMonth,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrevMonth=new Date(calYear,calMonth,0).getDate();
+  const todayStr=localDateStr(new Date());
+  const cells=[];
+  for(let i=0;i<startDow;i++){
+    const d=daysInPrevMonth-startDow+1+i;
+    cells.push({d,other:true,ds:null});
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    cells.push({d,other:false,ds});
+  }
+  while(cells.length%7!==0){
+    const d=cells.length-(startDow+daysInMonth)+1;
+    cells.push({d,other:true,ds:null});
+  }
+  document.getElementById('calMonthLabel').textContent=first.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('calGrid').innerHTML=cells.map(c=>{
+    if(c.other) return `<div class="cal-day other-month"><span>${c.d}</span></div>`;
+    const cnt=counts[c.ds]||0;
+    const cls=['cal-day'];
+    if(c.ds===todayStr) cls.push('today');
+    if(c.ds===calSelectedDate) cls.push('selected');
+    return `<div class="${cls.join(' ')}" onclick="selectAgendaDate('${c.ds}')"><span>${c.d}</span>${cnt?`<span class="cal-badge">${cnt}</span>`:''}</div>`;
+  }).join('');
+}
+function selectAgendaDate(ds){
+  calSelectedDate=ds;
+  const dt=new Date(ds+'T00:00:00');
+  if(dt.getMonth()!==calMonth||dt.getFullYear()!==calYear){ calMonth=dt.getMonth(); calYear=dt.getFullYear(); }
+  document.getElementById('agendaDateInput').value=ds;
+  renderCalendar();
+  renderAgendaList();
+}
+function onAgendaDateInputChange(){
+  const v=document.getElementById('agendaDateInput').value;
+  if(v) selectAgendaDate(v);
+}
+function renderAgendaList(){
+  const ds=calSelectedDate;
+  document.getElementById('agendaDateInput').value=ds||'';
+  const showLoja=isMaster()&&viewAllStores;
+  const list=agendaScope().filter(o=>o.DataAgendamento===ds).slice()
+    .sort((a,b)=>String(a.HoraAgendamento||'').localeCompare(String(b.HoraAgendamento||'')));
+  const label=ds?new Date(ds+'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}):'';
+  document.getElementById('agendaListTitle').textContent=ds?`Agendamentos — ${label}`:'Agendamentos';
+  document.getElementById('agendaListHint').textContent=ds?`${list.length} agendamento(s) nesta data, em ordem cronológica.`:'Selecione uma data no calendário para ver os agendamentos, em ordem cronológica.';
+  document.getElementById('agendaBody').innerHTML=list.map(o=>`<tr>
+    <td><b>${esc(o.HoraAgendamento||'—')}</b></td>${showLoja?`<td>${esc(lojaNomeById(o.LojaID))}</td>`:''}<td>${esc(o.Fornecedor)}</td><td>${esc(o.NumeroNF)}</td>
+    <td>${esc(stages[inferStatus(o)].title)}</td><td>${esc(o.Observacao||'—')}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="openScheduleModal('${esc(o.ID)}')">Editar</button></td>
+  </tr>`).join('')||`<tr><td colspan="${showLoja?7:6}" class="empty">${ds?'Nenhum agendamento nesta data':'Selecione uma data'}</td></tr>`;
+}
+function openScheduleModal(id){
+  const o=receipts.find(x=>String(x.ID)===String(id)); if(!o) return;
+  pendingScheduleId=id;
+  document.getElementById('scNewFields').style.display='none';
+  document.getElementById('scheduleLabel').textContent=`${o.ID} — ${o.Fornecedor} (NF ${o.NumeroNF||'—'})`;
+  document.getElementById('scDate').value=o.DataAgendamento||calSelectedDate||localDateStr(new Date());
+  document.getElementById('scTime').value=o.HoraAgendamento||'';
+  document.getElementById('scNote').value='';
+  document.getElementById('scRemoveBtn').style.display=o.DataAgendamento?'inline-flex':'none';
+  openModal('scheduleModal');
+}
+function openNewScheduleModal(){
+  pendingScheduleId=null;
+  document.getElementById('scNewFields').style.display='grid';
+  document.getElementById('scheduleLabel').textContent='Agende a entrega antes mesmo do motorista chegar — check-in e listagem acontecem depois, normalmente.';
+  const lojaField=document.getElementById('scLojaField');
+  if(isMaster()){
+    lojaField.style.display='block';
+    document.getElementById('scLoja').innerHTML=allLojasCache.map(l=>`<option value="${esc(l.ID)}">${esc(l.Nome)}</option>`).join('');
+    document.getElementById('scLoja').value=currentSession.loja;
+    document.getElementById('scLoja').onchange=()=>fillScFornecedores();
+  } else {
+    lojaField.style.display='none';
+  }
+  fillScFornecedores();
+  document.getElementById('scNF').value='';
+  document.getElementById('scDate').value=calSelectedDate||localDateStr(new Date());
+  document.getElementById('scTime').value='';
+  document.getElementById('scNote').value='';
+  document.getElementById('scRemoveBtn').style.display='none';
+  openModal('scheduleModal');
+}
+function scLojaAtual(){
+  return isMaster()?(document.getElementById('scLoja').value||currentSession.loja):currentSession.loja;
+}
+function fillScFornecedores(){
+  const lista=fornecedoresConhecidos(scLojaAtual());
+  document.getElementById('scFornecedor').innerHTML=(lista.length?lista.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join(''):'<option value="" disabled selected>Nenhum fornecedor cadastrado</option>')+'<option value="__novo__">＋ Cadastrar novo fornecedor...</option>';
+  onScFornecedorChange();
+}
+function onScFornecedorChange(){
+  const novo=document.getElementById('scFornecedor').value==='__novo__';
+  document.getElementById('scNovoFornecedorField').style.display=novo?'flex':'none';
+}
+async function confirmSchedule(){
+  const data=document.getElementById('scDate').value;
+  const hora=document.getElementById('scTime').value;
+  const nota=document.getElementById('scNote').value.trim();
+  if(!data||!hora){ showToast('Informe a data e a hora do agendamento.'); return; }
+  if(pendingScheduleId){
+    const o=receipts.find(x=>String(x.ID)===String(pendingScheduleId)); if(!o) return;
+    o.DataAgendamento=data; o.HoraAgendamento=hora;
+    if(nota) o.Observacao=(o.Observacao?o.Observacao+' | ':'')+nota;
+    closeModal('scheduleModal');
+    const res=await persistReceipt(o);
+    if(res&&res.ok){ showToast('Agendamento salvo.'); calSelectedDate=data; renderAll(); }
+    return;
+  }
+  // criação de um agendamento antecipado (sem check-in ainda)
+  const lojaId=scLojaAtual();
+  let fornecedor=document.getElementById('scFornecedor').value;
+  if(!fornecedor){ showToast('Selecione o fornecedor.'); return; }
+  const fornecedorNovoNome=fornecedor==='__novo__'?document.getElementById('scNovoFornecedor').value.replace(/\s+/g,' ').trim():'';
+  if(fornecedor==='__novo__'&&!fornecedorNovoNome){ showToast('Informe o nome do novo fornecedor.'); return; }
+  if(fornecedor==='__novo__'){
+    fornecedor=fornecedoresConhecidos(lojaId).find(f=>f.toLowerCase()===fornecedorNovoNome.toLowerCase())||fornecedorNovoNome;
+    const rf=await api('saveFornecedor',{Nome:fornecedor,LojaID:lojaId});
+    if(!rf.ok){ showToast(rf.error||'Falha ao cadastrar o novo fornecedor.'); return; }
+    fornecedoresCache.push({ID:rf.id,LojaID:lojaId,Nome:fornecedor,Status:'Ativo',CriadoEm:new Date().toISOString()});
+  }
+  const payload={LojaID:lojaId,Fornecedor:fornecedor,NumeroNF:document.getElementById('scNF').value.trim(),
+    DataAgendamento:data,HoraAgendamento:hora,Observacao:nota,Prioridade:'Normal'};
+  closeModal('scheduleModal');
+  const res=await api('saveReceipt',payload);
+  if(res&&res.ok){ showToast('Entrega agendada.'); calSelectedDate=data; await loadAll(); renderAll(); }
+  else showToast((res&&res.error)||'Falha ao agendar entrega.');
+}
+async function confirmRemoveSchedule(){
+  const id=pendingScheduleId; if(!id) return;
+  const o=receipts.find(x=>String(x.ID)===String(id)); if(!o) return;
+  o.DataAgendamento=''; o.HoraAgendamento='';
+  closeModal('scheduleModal');
+  const res=await persistReceipt(o);
+  if(res&&res.ok){ showToast('Agendamento removido.'); renderAll(); }
 }
 
 /* ---------- modal de recebimento (novo / detalhes) ---------- */
@@ -1232,10 +1589,12 @@ async function saveDailySla(){
 function exportExcel(){
   const list=filteredReceipts();
   const min=ms=>ms==null?'':Math.round(ms/600)/100;
-  const header=['ID','Loja','Fornecedor','NF','Transportadora','Motorista','Placa','Departamento','Tipo de carga','Volumes','Recebedor','Prioridade','SLA (min)','Apresentação da nota','Aguardando listagem','Início descarga','Final descarga','Apres.→listagem (min)','Espera p/ descarga (min)','Descarga (min)','Ciclo total (min)','Resultado','Observação','Divergência','Descrição da divergência'];
-  const rows=[header,...list.map(o=>[o.ID,lojaNomeById(o.LojaID),o.Fornecedor,o.NumeroNF,o.Transportadora,o.Motorista,o.Placa,o.Departamento,o.TipoCarga,volumesOf(o),o.Recebedor,o.Prioridade,slaMinutesOf(o),
-    o.ApresentacaoNota,o.AguardandoListagem,o.InicioDescarga,o.FinalDescarga,min(dur(o,'ApresentacaoNota','AguardandoListagem')),min(dur(o,'AguardandoListagem','InicioDescarga')),min(dur(o,'InicioDescarga','FinalDescarga')),min(dur(o,'ApresentacaoNota','FinalDescarga')),
-    isDone(o)?(finishedOnTime(o)?'Dentro do SLA':'Fora do SLA'):(isLate(o)?'Em atraso':'Em andamento'),o.Observacao,o.Divergencia||'',o.DivergenciaDescricao||''])];
+  const header=['ID','Loja','Fornecedor','NF','Transportadora','Motorista','Placa','Departamento','Tipo de carga','Volumes','Recebedor','Prioridade','SLA (min)','Apresentação da nota','Aguardando listagem','Etapa agendamento','Início descarga','Final descarga','Apres.→listagem (min)','Listagem→agend. (min)','Agend.→descarga (min)','Descarga (min)','Ciclo total (min)','Resultado','Observação','Divergência','Descrição da divergência','Problema na listagem','Descrição do problema na listagem','Data/hora agendada'];
+  const rows=[header,...list.map(o=>{
+    return [o.ID,lojaNomeById(o.LojaID),o.Fornecedor,o.NumeroNF,o.Transportadora,o.Motorista,o.Placa,o.Departamento,o.TipoCarga,volumesOf(o),o.Recebedor,o.Prioridade,slaMinutesOf(o),
+    o.ApresentacaoNota,o.AguardandoListagem,o.Agendamento,o.InicioDescarga,o.FinalDescarga,min(dur(o,'ApresentacaoNota','AguardandoListagem')),min(dur(o,'AguardandoListagem','Agendamento')),min(dur(o,'Agendamento','InicioDescarga')),min(dur(o,'InicioDescarga','FinalDescarga')),min(dur(o,'ApresentacaoNota','FinalDescarga')),
+    isDone(o)?(finishedOnTime(o)?'Dentro do SLA':'Fora do SLA'):(isLate(o)?'Em atraso':'Em andamento'),o.Observacao,o.Divergencia||'',o.DivergenciaDescricao||'',o.ProblemaListagem||'',o.ProblemaListagemDescricao||'',(o.DataAgendamento?(o.DataAgendamento+(o.HoraAgendamento?' '+o.HoraAgendamento:'')):'')];
+  })];
   const sup=[['Fornecedor','Recebimentos','Volumes','Espera p/ descarga média (min)','Descarga média (min)','Ciclo médio (min)','Concluídos fora do SLA'],...supplierStats().map(s=>[s.name,s.count,s.volumes,min(s.wait),min(s.unload),min(s.cycle),s.late])];
   const blob=makeXlsx([
     {name:'Recebimentos',rows,widths:[12,18,28,12,22,20,10,18,14,9,20,11,10,22,22,22,22,14,14,12,12,14,30,12,36],headerRows:[0]},
@@ -1251,9 +1610,10 @@ function renderAll(){
   const active=document.querySelector('.view.active');
   const v=active?active.id.replace('view-',''):'kanban';
   if(v==='kanban') renderKanban();
-  else if(v==='dashboard'){ renderKpis();renderStageMetrics();renderHourChart();renderStatusChart(); }
+  else if(v==='dashboard'){ renderKpis();renderStageMetrics();renderHourChart();renderStatusChart();renderListagemReport(); }
   else if(v==='analysis'){ renderDailyChart();renderAnalysis(); }
   else if(v==='suppliers') renderSuppliers();
+  else if(v==='agendamentos'){ renderCalendar(); renderAgendaList(); }
   renderDailySla();
 }
 function tickClock(){document.getElementById('liveClock').textContent=new Date().toLocaleTimeString('pt-BR');}
@@ -1266,7 +1626,7 @@ document.addEventListener('pointerdown',()=>{pointerActive=true;},true);
 setInterval(()=>{ if(!draggedId && !pointerActive && document.getElementById('view-kanban').classList.contains('active')) renderKanban(); },1000);
 window.addEventListener('click',e=>{
   if(!e.target.classList.contains('modal-backdrop')) return;
-  const protectedModals=['receiptModal','divergenceModal','dailySlaModal','adminResetPasswordModal','adminCreateUserModal','adminEditUserModal','adminEditLojaModal'];
+  const protectedModals=['receiptModal','divergenceModal','listagemModal','dailySlaModal','adminResetPasswordModal','adminCreateUserModal','adminEditUserModal','adminEditLojaModal','scheduleModal'];
   if(protectedModals.includes(e.target.id)) return;
   e.target.classList.remove('open');
 });
